@@ -33,6 +33,7 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
 
   private implicit val rawJsonUnmarshaller: Unmarshaller[HttpEntity, String] = jsonUnmarshaller
   private implicit val seqJsonUnmarshaller: Unmarshaller[HttpEntity, Seq[SourceOffenderDelta]] = jsonUnmarshaller.map(read[Seq[SourceOffenderDelta]])
+  private implicit val seqIdsUnmarshaller: Unmarshaller[HttpEntity, Seq[String]] = jsonUnmarshaller.map(read[Seq[String]])
 
   private implicit val plainTextUnmarshaller: Unmarshaller[HttpEntity, String] = stringUnmarshaller(MediaTypes.`text/plain`)
 
@@ -50,9 +51,14 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
 
     http.singleRequest(request).flatMap {
 
-      case HttpResponse(statusCode, _, _, _) if statusCode.isFailure => throw new Exception(statusCode.value)
+      case response @ HttpResponse(statusCode, _, _, _) if statusCode.isFailure =>
 
-      case HttpResponse(_, _, entity, _) => Unmarshal(entity).to[T].map(success)
+        response.discardEntityBytes()         //@TODO: Necessary? Test
+        throw new Exception(statusCode.value)
+
+      case HttpResponse(_, _, entity, _) =>
+
+        Unmarshal(entity).to[T].map(success)
 
     }.recover { case error: Throwable => failure(error) }
   }
@@ -81,7 +87,17 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
       )
     }
 
-  //@TODO: call /allOffenderIds
+  override def pullAllIds: Future[AllIdsResult] =
+
+    logon.flatMap { authHeaders =>
+
+      makeRequest[Seq[String], AllIdsResult](
+        authHeaders,
+        s"$apiBaseUrl/allOffenderIds",
+        AllIdsResult(_, None),
+        error => AllIdsResult(Seq(), Some(error))
+      )
+    }
 
   override def pull(id: String, cohort: DateTime): Future[BuildResult] =
 
@@ -90,8 +106,8 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
       makeRequest[String, BuildResult](
         authHeaders,
         s"$apiBaseUrl/offender/id/$id",
-        json => BuildResult(Some(TargetOffender(id, json, cohort)), None),
-        error => BuildResult(None, Some(error))
+        json => BuildResult(TargetOffender(id, json, cohort), None),
+        error => BuildResult(TargetOffender(id, "", cohort), Some(error))
       )
     }
 
@@ -102,8 +118,8 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
       makeRequest[String, PurgeResult](
         authHeaders,
         s"$apiBaseUrl/offenderDeltaIds/olderThan/${cohort.toString}",
-        _ => PurgeResult(Some(cohort), None),
-        error => PurgeResult(None, Some(error)),
+        _ => PurgeResult(cohort, None),
+        error => PurgeResult(cohort, Some(error)),
         HttpMethods.DELETE
       )
     }

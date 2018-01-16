@@ -1,3 +1,3 @@
 package gov.uk.justice.digital.offenderpollpush.data
 
-case class PullResult(events: Seq[SourceOffenderDelta], error: Option[Throwable])
+case class PullResult(delta: Seq[SourceOffenderDelta], error: Option[Throwable])
