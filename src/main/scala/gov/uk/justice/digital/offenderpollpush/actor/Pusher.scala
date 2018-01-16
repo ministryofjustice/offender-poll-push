@@ -28,6 +28,8 @@ class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
         case (_, Some(error)) => log.warning(s"Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} PUSH ERROR: ${error.getMessage}")
 
         case (Some(result), None) => log.info(s"Push for Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} returned ${result.value} $body")
+
+        case _ => log.warning("PUSH ERROR: No result or error")
       }
 
       poller ! pushResult

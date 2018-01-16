@@ -1,3 +1,4 @@
+/*
 import Helpers.SourceCaseNoteBuilder
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.DateTime
@@ -164,3 +165,4 @@ class NomisSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with M
 
   override def generate() = "FooBar"
 }
+*/

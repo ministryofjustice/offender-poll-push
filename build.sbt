@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "org.clapper" %% "grizzled-slf4j" % "1.3.2",
   "net.codingwell" %% "scala-guice" % "4.1.1",
   "com.typesafe.akka" %% "akka-http" % "10.0.11",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.5.8",
+  "com.typesafe.akka" %% "akka-slf4j" % "2.4.12",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.elasticsearch.client" % "elasticsearch-rest-high-level-client" % "6.1.1",
 

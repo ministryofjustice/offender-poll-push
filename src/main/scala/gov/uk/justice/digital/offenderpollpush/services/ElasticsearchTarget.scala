@@ -8,6 +8,7 @@ import grizzled.slf4j.Logging
 import org.elasticsearch.action.index.{IndexRequest, IndexResponse}
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.common.xcontent.XContentType
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ElasticsearchTarget @Inject() (elasticSearchClient: RestHighLevelClient) extends SingleTarget with Logging {
