@@ -18,6 +18,7 @@ libraryDependencies ++= Seq(
   "org.elasticsearch.client" % "elasticsearch-rest-high-level-client" % "6.1.1",
 
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
+  "org.mockito" % "mockito-core" % "2.13.0" % "test",
   "com.github.tomakehurst" % "wiremock" % "2.13.0" % "test",
 )
 

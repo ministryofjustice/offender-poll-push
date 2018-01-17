@@ -69,9 +69,13 @@ class Poller @Inject() (source: BulkSource,
         case PullResult(Seq(_*), None) =>
 
           val cohort = deltas.map(_.date).max
-          for (request <- deltas.map(_.id).distinct.map(BuildRequest(_, cohort))) builder ! request
+          val uniqueIds = deltas.map(_.id).distinct
 
-          State(state.outstanding + deltas.length, Some(cohort))  // Replace None or older cohort with latest cohort
+          log.info(s"Cohort $cohort contains ${uniqueIds.length} unique Offender Delta Id(s)")
+
+          for (request <- uniqueIds.map(BuildRequest(_, cohort))) builder ! request
+
+          State(state.outstanding + uniqueIds.length, Some(cohort))  // Replace None or older cohort with latest cohort
       }
 
       context.system.scheduler.scheduleOnce(duration, self, PullRequest)
