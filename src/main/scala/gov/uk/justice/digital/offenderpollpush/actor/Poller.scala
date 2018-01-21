@@ -25,6 +25,8 @@ class Poller @Inject() (source: BulkSource,
   override def preStart { self ! PullRequest }
   override def receive: Receive = process(State(0, None))
 
+  private def schedulePullRequest() = context.system.scheduler.scheduleOnce(duration, self, PullRequest)
+
   private def process(state: State): Receive = {
 
     case PullRequest =>
@@ -58,29 +60,28 @@ class Poller @Inject() (source: BulkSource,
 
       log.info(s"Pulled ${deltas.length} Offender Delta(s)")
 
-      val newState = pullResult match {
+      context become process(
+        pullResult match {
 
-        case PullResult(_, Some(error)) =>
+          case PullResult(Seq(_, _*), None) =>  // At least one result and no Error
 
-          log.warning(s"PULL ERROR: ${error.getMessage}")
-          state
+            val cohort = deltas.map(_.dateChanged).max
+            val uniqueIds = deltas.map(_.offenderId).distinct
 
-        case PullResult(Seq(), None) => state
+            log.info(s"Cohort $cohort contains ${uniqueIds.length} unique Offender Delta Id(s)")
 
-        case PullResult(Seq(_*), None) =>
+            for (request <- uniqueIds.map(BuildRequest(_, cohort))) paging ! request
 
-          val cohort = deltas.map(_.dateChanged).max
-          val uniqueIds = deltas.map(_.offenderId).distinct
+            State(state.outstanding + uniqueIds.length, Some(cohort))  // Replace None or older cohort with latest cohort
 
-          log.info(s"Cohort $cohort contains ${uniqueIds.length} unique Offender Delta Id(s)")
+          case _ => // PullResult(Seq(), None) or PullResult(_, Some(error))
 
-          for (request <- uniqueIds.map(BuildRequest(_, cohort))) paging ! request
+            for (error <- pullResult.error) log.warning(s"PULL ERROR: ${error.getMessage}") // Log error if it exists
 
-          State(state.outstanding + uniqueIds.length, Some(cohort))  // Replace None or older cohort with latest cohort
-      }
-
-      context.system.scheduler.scheduleOnce(duration, self, PullRequest)
-      context become process(newState)
+            schedulePullRequest()   // For successful empty pulls, or error pulls, schedule a pull request after timeout
+            state
+        }
+      )
 
 
     case PushResult(TargetOffender(id, _, cohort), _, _, _) =>
@@ -103,19 +104,15 @@ class Poller @Inject() (source: BulkSource,
       }
 
 
-    case PurgeResult(cohort, Some(error)) => log.warning(s"PURGE ERROR (Cohort: $cohort): ${error.getMessage}")
+    case purgeResult @ PurgeResult(cohort, _) =>
 
-    case PurgeResult(cohort, None) => log.info(s"Purged Offender Delta Cohort: $cohort")
+      purgeResult.error match {
+
+        case Some(error) => log.warning(s"PURGE ERROR (Cohort: $cohort): ${error.getMessage}")
+
+        case None => log.info(s"Purged Offender Delta Cohort: $cohort")
+      }
+
+      schedulePullRequest()   // Now a pull has successfully processed requests and finished, schedule a new pull after timeout
   }
 }
-
-
-// test multiple overlapping pulls. test receieving completion back and calling delete.
-
-// Poller doesn't need protecting from pull REST starvation, as will just have another go in scheduled x seconds anyway
-
-// a completed message will decrement, and if reaches zero, willl delete from lastcohort older, and reset to none
-// If two pulls come in, numbers are mainatained, and newwest cohot stored,
-
-
-//@TESTS - DOCKER compose etc

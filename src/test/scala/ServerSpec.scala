@@ -132,7 +132,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
       }
     }
 
-    it("pulls three Offender Deltas, processes some, then pulls the next delta before the first delta is processed") {
+    it("pulls three Offender Deltas, processes some, then doesn't pull the next delta until the first delta is processed") {
 
       var pullDeltaCount = 0
       val dateTimeFirst = DateTime.now
@@ -169,20 +169,22 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
 
       When("the service runs and pulls a second Delta of 4 Offenders and processes before the first Delta has finished processing")
       runServerWithMockedServices()
-      eventually(tenSecondTimeout) {
+      eventually(fiveSecondTimeout) {
 
-        verify(mockBulkSource, times(2)).pullDeltas
-        verify(mockSingleSource, times(7)).pull(any[String], any[DateTime])
-        verify(mockSingleTarget, times(6)).push(any[TargetOffender])
+        verify(mockBulkSource, times(1)).pullDeltas
+        verify(mockSingleSource, times(3)).pull(any[String], any[DateTime])
+        verify(mockSingleTarget, times(2)).push(any[TargetOffender])
         verify(mockBulkSource, never()).deleteCohort(any[DateTime])
       }
 
-      Then("the slow Offender build from the first Delta finally completes and everything older than the first Cohort is deleted in one call")
+      Then("the slow Offender build from the first Delta finally completes and is deleted, and then the second Delta is processed")
       slowFirstDeltaBuildResult.success(BuildResult(slowFirstDeltaTargetOffender, None))
-      eventually(fiveSecondTimeout) {
+      eventually(tenSecondTimeout) {
 
         verify(mockSingleTarget).push(slowFirstDeltaTargetOffender)
-        verify(mockBulkSource, never()).deleteCohort(dateTimeFirst)
+        verify(mockBulkSource, times(1)).deleteCohort(dateTimeFirst)
+        verify(mockSingleSource, times(7)).pull(any[String], any[DateTime])
+        verify(mockSingleTarget, times(7)).push(any[TargetOffender])
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeSecond)
       }
     }
