@@ -34,8 +34,8 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
   private def jsonUnmarshaller[T](transform: String => T) = stringUnmarshaller(MediaTypes.`application/json`).map(transform)
   private def readUnmarshaller[T: Manifest] = jsonUnmarshaller(read[T])
 
-  private implicit val plainTextUnmarshaller: Unmarshaller[HttpEntity, String] = stringUnmarshaller(MediaTypes.`text/plain`, MediaTypes.`application/json`)
-
+  private implicit val plainTextUnmarshaller: Unmarshaller[HttpEntity, String] = stringUnmarshaller() // MediaTypes.`text/plain`) //, MediaTypes.`application/json`)
+//@todo: above commented needed for pull offender id json into raw text??
   private implicit val seqIdsUnmarshaller: Unmarshaller[HttpEntity, Seq[String]] = readUnmarshaller[Seq[String]]
   private implicit val seqJsonUnmarshaller: Unmarshaller[HttpEntity, Seq[SourceOffenderDelta]] = readUnmarshaller[Seq[SourceOffenderDelta]]
 
@@ -56,7 +56,7 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
 
       case response @ HttpResponse(statusCode, _, _, _) if statusCode.isFailure =>
 
-        response.discardEntityBytes()         //@TODO: Necessary? Test
+        response.discardEntityBytes()
         throw new Exception(statusCode.value)
 
       case HttpResponse(_, _, entity, _) =>
@@ -66,14 +66,58 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
     }.recover { case error: Throwable => failure(error) }
   }
 
-  private def logon = //@TODO: Keep old one while valid for a while ... no need to logon each time
+/*
+  private var credentials: Future[List[HttpHeader]] = Future(List[HttpHeader]()) // will need sync for this to change it
+//credentials.isCompleted
+
+  private def attemptRequestAndLogonIfNeeded[T <: ErrorResult](request: () => Future[T]): Future[T] = {
+
+// Need to wait for any exising credentials to complete then use. quite thorny
+
+// if one in process then append only
+// if one finished try, and and if fails append again
+
+    credentials.value match {
+
+      case Some(Success(authHeaders)) => authHeader
+
+
+    }
+    credentials.isCompleted
+
+    request().flatMap { result =>
+
+      result.error match {
+
+        case Some(throwable) if throwable.getMessage == StatusCodes.Unauthorized.value =>
+
+          logon.flatMap { authHeaders =>
+
+            a
+
+          }
+
+          Future { result }
+
+
+        case _ => Future { result }
+      }
+    }
+  }
+*/
+
+  private def logon = //@TODO: Keep old one while valid for a while ... no need to logon each time. Shared state across threads though
 
     makeRequest[String, List[HttpHeader]](
       _.to[String],
       List(),
       s"$apiBaseUrl/logon",
       bearerToken => List(Authorization(OAuth2BearerToken(bearerToken))),
-      _ => List(),
+      error => {
+
+        logger.error(s"Login for $apiUsername failed", error)
+        List()
+      },
       HttpMethods.POST,
       apiUsername
     )
@@ -112,9 +156,9 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
       makeRequest[String, BuildResult](
         _.to[String],
         authHeaders,
-        s"$apiBaseUrl/offender/id/$id",
+        s"$apiBaseUrl/offenders/offenderId/$id",
         json => BuildResult(TargetOffender(id, json, cohort), None),
-        error => BuildResult(TargetOffender(id, "", cohort), Some(error))
+        error => BuildResult(TargetOffender(id, error.getMessage, cohort), Some(error))
       )
     }
 
@@ -125,7 +169,7 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
       makeRequest[String, PurgeResult](
         _.to[String],
         authHeaders,
-        s"$apiBaseUrl/offenderDeltaIds/before/${cohort.toString}",
+        s"$apiBaseUrl/offenderDeltaIds?before=${cohort.toString}",
         _ => PurgeResult(cohort, None),
         error => PurgeResult(cohort, Some(error)),
         HttpMethods.DELETE

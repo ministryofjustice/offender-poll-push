@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/offenderDeltaIds"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": [
+      {
+        "offenderId": 2500160158,
+        "dateChanged": "2018-01-18T15:35:13"
+      },
+      {
+        "offenderId": 2500160156,
+        "dateChanged": "2018-01-18T15:35:35"
+      },
+      {
+        "offenderId": 2500160158,
+        "dateChanged": "2018-01-18T15:36:36"
+      }
+    ],
+    "fixedDelayMilliseconds": 1000
+  }
+}

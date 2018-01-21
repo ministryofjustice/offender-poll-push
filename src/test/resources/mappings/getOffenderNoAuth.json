@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/offenders/offenderId/000"
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "WWW-Authenticate": "Bearer realm=\"example\""
+    },
+    "delayDistribution": {
+      "type": "uniform",
+      "lower": 500,
+      "upper": 1500
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPath": "/internalError"
+    "urlPath": "/internalError/offenderDeltaIds"
   },
   "response": {
     "status": 500,

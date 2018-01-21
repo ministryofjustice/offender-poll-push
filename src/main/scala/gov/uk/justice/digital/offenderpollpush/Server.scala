@@ -30,6 +30,7 @@ object Server extends App with Logging {
 
     startActor[Pusher]
     startActor[Builder]
+    startActor[Paging]
     startActor[Poller]
 
     system

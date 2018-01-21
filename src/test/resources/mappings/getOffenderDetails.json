@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/offenders/offenderId/456",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer ABCDEFGHIJKLMNOP"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "some": "json"
+    },
+    "delayDistribution": {
+      "type": "uniform",
+      "lower": 500,
+      "upper": 1500
+    }
+  }
+}

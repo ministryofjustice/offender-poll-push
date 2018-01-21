@@ -20,7 +20,8 @@ class Poller @Inject() (source: BulkSource,
   private case class State(outstanding: Int, lastCohort: Option[DateTime])
 
   private val duration = timeout.seconds
-  private def builder = context.actorSelection("/user/Builder")
+//private def builder = context.actorSelection("/user/Builder") //@TODO make into pager instead and start it
+  private def paging = context.actorSelection("/user/Paging")
 
   override def preStart { self ! PullRequest }
   override def receive: Receive = process(State(0, None))
@@ -32,7 +33,7 @@ class Poller @Inject() (source: BulkSource,
       if (allOffenders) {
 
         log.info("Pulling Offender Ids ...")
-        source.pullAllIds.pipeTo(self)
+        source.pullAllIds.pipeTo(self)  //@TODO: Incorporate Pull All Paging
 
       } else {
 
@@ -49,7 +50,7 @@ class Poller @Inject() (source: BulkSource,
 
         case AllIdsResult(_, Some(error)) => log.warning(s"PULL ERROR: ${error.getMessage}")
 
-        case AllIdsResult(_, None) => for (request <- offenders.map(BuildRequest(_, DateTime.now))) builder ! request
+        case AllIdsResult(_, None) => for (request <- offenders.map(BuildRequest(_, DateTime.now))) paging ! request
       }
 
 
@@ -68,12 +69,12 @@ class Poller @Inject() (source: BulkSource,
 
         case PullResult(Seq(_*), None) =>
 
-          val cohort = deltas.map(_.date).max
-          val uniqueIds = deltas.map(_.id).distinct
+          val cohort = deltas.map(_.dateChanged).max
+          val uniqueIds = deltas.map(_.offenderId).distinct
 
           log.info(s"Cohort $cohort contains ${uniqueIds.length} unique Offender Delta Id(s)")
 
-          for (request <- uniqueIds.map(BuildRequest(_, cohort))) builder ! request
+          for (request <- uniqueIds.map(BuildRequest(_, cohort))) paging ! request
 
           State(state.outstanding + uniqueIds.length, Some(cohort))  // Replace None or older cohort with latest cohort
       }
@@ -95,7 +96,9 @@ class Poller @Inject() (source: BulkSource,
             source.deleteCohort(lastCohort).pipeTo(self)
             State(0, None)
 
-          case State(outstanding, lastCohort) => State(outstanding - 1, lastCohort)
+          case State(outstanding, lastCohort) =>
+
+            State(outstanding - 1, lastCohort)
         })
       }
 

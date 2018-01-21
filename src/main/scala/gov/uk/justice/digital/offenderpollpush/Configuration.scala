@@ -29,7 +29,8 @@ class Configuration extends AbstractModule with ScalaModule {
     "DELIUS_API_USERNAME" -> "unknown",
     "ELASTIC_SEARCH_HOST" -> "localhost",
     "ELASTIC_SEARCH_PORT" -> "9200",
-    "POLL_SECONDS" -> "60"
+    "PROCESS_PAGE_SIZE" -> "10",
+    "POLL_SECONDS" -> "5"
   )
 
   override final def configure() {
@@ -46,6 +47,7 @@ class Configuration extends AbstractModule with ScalaModule {
     bindConfiguration(
       Map(
         "timeout" -> "POLL_SECONDS",
+        "pageSize" -> "PROCESS_PAGE_SIZE",
         "searchPort" -> "ELASTIC_SEARCH_PORT"
       ),
       s => s.toInt

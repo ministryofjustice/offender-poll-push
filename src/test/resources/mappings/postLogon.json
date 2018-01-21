@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/logon",
+    "bodyPatterns": [
+      {
+        "matches": "NationalUser"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain"
+    },
+    "body": "ABCDEFGHIJKLMNOP",
+    "fixedDelayMilliseconds": 1000
+  }
+}

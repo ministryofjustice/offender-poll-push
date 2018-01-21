@@ -9,7 +9,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
 
-  private def poller = context.actorSelection("/user/Poller")
+//private def poller = context.actorSelection("/user/Poller")
+  private def paging = context.actorSelection("/user/Paging")
 
   override def receive: Receive = {
 
@@ -23,7 +24,7 @@ class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
 
       (pushResult.result, pushResult.error) match {
 
-        // @TODO: what if connection pool full? test
+        // @TODO: what if connection pool full? test, may delete as not necessary any more with paging
 
         case (_, Some(error)) => log.warning(s"Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} PUSH ERROR: ${error.getMessage}")
 
@@ -32,7 +33,7 @@ class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
         case _ => log.warning("PUSH ERROR: No result or error")
       }
 
-      poller ! pushResult
+      paging ! pushResult
   }
 }
 

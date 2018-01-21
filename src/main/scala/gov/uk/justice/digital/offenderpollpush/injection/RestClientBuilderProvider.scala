@@ -8,5 +8,5 @@ import org.elasticsearch.client.{RestClient, RestClientBuilder}
 class RestClientBuilderProvider @Inject() (@Named("searchHost") searchHost: String,
                                            @Named("searchPort") searchPort: Int) extends Provider[RestClientBuilder] {
 
-  override def get() = RestClient.builder(new HttpHost(searchHost, searchPort))
+  override def get: RestClientBuilder = RestClient.builder(new HttpHost(searchHost, searchPort))
 }

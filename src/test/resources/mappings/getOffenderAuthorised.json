@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/offenders/offenderId/123",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer ABCDEFGHIJKLMNOP"
+      }
+    }
+  },
+  "response": {
+    "status": 404,
+    "delayDistribution": {
+      "type": "uniform",
+      "lower": 500,
+      "upper": 1500
+    }
+  }
+}

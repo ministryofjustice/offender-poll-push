@@ -9,7 +9,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Builder @Inject() (source: SingleSource) extends Actor with ActorLogging {
 
-  private def poller = context.actorSelection("/user/Poller")
+//private def poller = context.actorSelection("/user/Poller")
+  private def paging = context.actorSelection("/user/Paging")
   private def pusher = context.actorSelection("/user/Pusher")
 
   override def receive: Receive = {
@@ -32,7 +33,7 @@ class Builder @Inject() (source: SingleSource) extends Actor with ActorLogging {
         case Some(error) =>
 
           log.warning(s"BUILD ERROR: ${error.getMessage}")
-          poller ! PushResult(offender, None, "", None)     // Inform Poller that future Push attempt has been account for
+          paging ! PushResult(offender, None, "", None)     // Inform Poller that future Push attempt has been account for
 
         case None =>
 

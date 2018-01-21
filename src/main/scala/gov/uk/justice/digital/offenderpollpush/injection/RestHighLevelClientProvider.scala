@@ -5,5 +5,5 @@ import org.elasticsearch.client.{RestClientBuilder, RestHighLevelClient}
 
 class RestHighLevelClientProvider @Inject() (builder: RestClientBuilder) extends Provider[RestHighLevelClient] {
 
-  override def get() = new RestHighLevelClient(builder)
+  override def get: RestHighLevelClient = new RestHighLevelClient(builder)
 }
