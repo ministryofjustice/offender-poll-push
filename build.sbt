@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % "10.0.11",
   "com.typesafe.akka" %% "akka-slf4j" % "2.4.12",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.9.1",
   "org.elasticsearch.client" % "elasticsearch-rest-high-level-client" % "6.1.1",
 
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
