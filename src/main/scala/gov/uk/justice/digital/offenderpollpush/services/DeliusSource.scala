@@ -34,8 +34,8 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
   private def jsonUnmarshaller[T](transform: String => T) = stringUnmarshaller(MediaTypes.`application/json`).map(transform)
   private def readUnmarshaller[T: Manifest] = jsonUnmarshaller(read[T])
 
-  private implicit val plainTextUnmarshaller: Unmarshaller[HttpEntity, String] = stringUnmarshaller() // MediaTypes.`text/plain`) //, MediaTypes.`application/json`)
-//@todo: above commented needed for pull offender id json into raw text??
+  private implicit val plainTextUnmarshaller: Unmarshaller[HttpEntity, String] = stringUnmarshaller()
+
   private implicit val seqIdsUnmarshaller: Unmarshaller[HttpEntity, Seq[String]] = readUnmarshaller[Seq[String]]
   private implicit val seqJsonUnmarshaller: Unmarshaller[HttpEntity, Seq[SourceOffenderDelta]] = readUnmarshaller[Seq[SourceOffenderDelta]]
 

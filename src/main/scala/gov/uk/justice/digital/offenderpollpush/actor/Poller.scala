@@ -20,7 +20,6 @@ class Poller @Inject() (source: BulkSource,
   private case class State(outstanding: Int, lastCohort: Option[DateTime])
 
   private val duration = timeout.seconds
-//private def builder = context.actorSelection("/user/Builder") //@TODO make into pager instead and start it
   private def paging = context.actorSelection("/user/Paging")
 
   override def preStart { self ! PullRequest }
@@ -33,7 +32,7 @@ class Poller @Inject() (source: BulkSource,
       if (allOffenders) {
 
         log.info("Pulling Offender Ids ...")
-        source.pullAllIds.pipeTo(self)  //@TODO: Incorporate Pull All Paging
+        source.pullAllIds.pipeTo(self)  //@TODO: Incorporate Pull All Paging calls
 
       } else {
 
@@ -52,6 +51,7 @@ class Poller @Inject() (source: BulkSource,
 
         case AllIdsResult(_, None) => for (request <- offenders.map(BuildRequest(_, DateTime.now))) paging ! request
       }
+      //@TODO: Perform poison pill once finished to exit for all IDs
 
 
     case pullResult @ PullResult(deltas, _) =>

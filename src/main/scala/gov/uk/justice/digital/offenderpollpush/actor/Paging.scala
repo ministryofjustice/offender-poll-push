@@ -14,70 +14,69 @@ class Paging @Inject() (@Named("pageSize") pageSize: Int) extends Actor with Act
 
   override def receive: Receive = process(State(0, Seq()))
 
-//@TODO: Do lots of logging about paging here //@TODO: Add paging TESTS
+//@TODO: Add paging TESTS - make page size 5 in tests, block 1, send 7, check only 5 pulls made until pull replies
+//@TODO: Also pull all with paging pulls into internal paging
 
   private def process(state: State): Receive = {
 
     case request @ BuildRequest(_, _) =>
 
-      context become process(if (state.waitingPages.isEmpty) {    // Current page only and nothing queued
+      context become process(
+        if (state.waitingPages.isEmpty) {    // Current page only and nothing queued
 
-        if (state.currentPage < pageSize) {      // Under max concurrent page, so add to now. Could be decremented later
+          if (state.currentPage < pageSize) {   // Under max concurrent page, so send immediately
 
-          builder ! request
-          State(state.currentPage + 1, Seq())
+            builder ! request
+            State(state.currentPage + 1, Seq())
 
-        } else {  // page limit reached, start to queue, will be sent when currentPage drops to zero ...
+          } else {  // Page limit reached, now queue all new requests until existing batch is completed
 
-          log.info("Creating the first waiting page of build requests")
+            log.info("Creating the first waiting page of build requests")
 
-          State(state.currentPage, Seq(Seq(request))) // Add to waitingPages - first one!
+            State(state.currentPage, Seq(Seq(request))) // Add to waitingPages - first one!
+          }
+
+        } else {  // Already have waiting pages (state.waitingPages.nonEmpty), so all requests are now paged until no paged requests
+
+          State(state.currentPage,
+            if (state.waitingPages.last.length < pageSize) { // Add to existing last non-full waiting page
+
+              state.waitingPages.init :+ (state.waitingPages.last :+ request)
+
+            } else { // All waiting pages full, start a new one
+
+              log.info(s"Creating an new waiting page in addition to ${state.waitingPages.length} pages of $pageSize requests")
+
+              state.waitingPages :+ Seq(request)
+            }
+          )
         }
-
-      } else {    // Already have waiting pages (state.waitingPages.nonEmpty), what now based on currentPage
-
-        State(state.currentPage, if (state.waitingPages.last.length < pageSize) { // Add to existing last non-full waiting page
-
-          state.waitingPages.init :+ (state.waitingPages.last :+ request)
-
-        } else { // All waiting pages full, start a new one
-
-          log.info(s"Creating an new waiting page in addition to ${state.waitingPages.length} pages of $pageSize requests")
-
-          state.waitingPages :+ Seq(request)
-        })
-      })
+      )
 
     case result @ PushResult(TargetOffender(id, _, cohort), _, _, _) =>
 
       poller ! result
 
-      context become process(if (state.currentPage > 1) {  // Others of current page still in flight, so let them complete
+      context become process(
+        if (state.currentPage > 1) {  // Others of current page still in flight, so let them complete
 
-        State(state.currentPage - 1, state.waitingPages)
+          State(state.currentPage - 1, state.waitingPages)
 
-      } else { // Was only one outstanding, so current page has completed. Now send all of next page if it exists, and change state
+        } else { // Was only one outstanding, so current page has completed. Now send all of next page if it exists
 
-        if (state.waitingPages.nonEmpty) {
+          if (state.waitingPages.nonEmpty) {
 
-          log.info(s"Sending a page of $pageSize build requests with ${state.waitingPages.length - 1} pages remaining")
+            log.info(s"Sending a page of ${state.waitingPages.head.length} build requests with ${state.waitingPages.length - 1} pages remaining")
 
-          for (request <- state.waitingPages.head) builder ! request
+            for (request <- state.waitingPages.head) builder ! request
 
-          State(state.waitingPages.head.length, state.waitingPages.tail)
+            State(state.waitingPages.head.length, state.waitingPages.tail)
 
-        } else {  // No current page left and none waiting
+          } else {  // No current page left and none waiting
 
-          State(0, Seq())
+            State(0, Seq())
+          }
         }
-      })
+      )
   }
 }
-
-// add to waiting pages if in apprproate place
-// after, if current page is 0 and have a full waiting page then send
-// this won't work, only want to page after x requests outstanfinf .. rethinf
-// allow a build up first, then once hit a full page (which may be decremented in mean time), wait for page to finish - add to waiting - and send all next page in meantime
-// when adding to pages keep to full page size and start a new page.
-// all logic will be on build request and push results. we dont; deal with build requests, only push results when completes
-

@@ -9,7 +9,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
 
-//private def poller = context.actorSelection("/user/Poller")
   private def paging = context.actorSelection("/user/Paging")
 
   override def receive: Receive = {
@@ -24,8 +23,6 @@ class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
 
       (pushResult.result, pushResult.error) match {
 
-        // @TODO: what if connection pool full? test, may delete as not necessary any more with paging
-
         case (_, Some(error)) => log.warning(s"Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} PUSH ERROR: ${error.getMessage}")
 
         case (Some(result), None) => log.info(s"Push for Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} returned ${result.value} $body")
@@ -36,6 +33,3 @@ class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
       paging ! pushResult
   }
 }
-
-//@TODO:
-// If fails in memory, when re-load will re-process all outstanding and delete olders, get up to date

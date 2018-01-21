@@ -9,7 +9,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Builder @Inject() (source: SingleSource) extends Actor with ActorLogging {
 
-//private def poller = context.actorSelection("/user/Poller")
   private def paging = context.actorSelection("/user/Paging")
   private def pusher = context.actorSelection("/user/Pusher")
 
@@ -23,12 +22,7 @@ class Builder @Inject() (source: SingleSource) extends Actor with ActorLogging {
 
     case buildResult @ BuildResult(offender, _) =>
 
-      buildResult.error match { //@TODO: Necessary max-open? Test
-
-        case Some(error: RuntimeException) if error.getMessage.contains("Exceeded configured max-open-requests value of") =>
-
-          log.info(s"Re-pulling Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} as client connection pool is full")
-          source.pull(offender.id, offender.cohort).pipeTo(self)
+      buildResult.error match {
 
         case Some(error) =>
 
