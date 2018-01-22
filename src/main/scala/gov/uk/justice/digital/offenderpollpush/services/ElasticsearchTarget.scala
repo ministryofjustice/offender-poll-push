@@ -16,7 +16,7 @@ class ElasticsearchTarget @Inject() (elasticSearchClient: RestHighLevelClient) e
   override def push(offender: TargetOffender): Future[PushResult] = {
 
     val listener = FutureListener[IndexResponse]
-    val request = new IndexRequest("offenders", "document", offender.id).source(offender.json, XContentType.JSON)
+    val request = new IndexRequest("offender", "document", offender.id).source(offender.json, XContentType.JSON)
 
     logger.debug(s"Sending to Elastic Search: ${offender.json}")
 
