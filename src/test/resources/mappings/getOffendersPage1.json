@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/offenders/offenderIds?pageSize=5&page=1"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/hal+json"
+    },
+    "jsonBody": {
+      "offenderIds": [
+        2500000501,
+        2500000502,
+        2500000503,
+        2500000504,
+        2500000505
+      ]
+    },
+    "fixedDelayMilliseconds": 1000
+  }
+}

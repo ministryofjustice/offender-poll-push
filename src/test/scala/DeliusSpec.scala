@@ -131,6 +131,28 @@ class DeliusSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with 
     }
   }
 
+  it("GETs Offenders Page from the API") {
+
+    val testPort = 8085
+
+    configureFor(testPort)
+    val api = new WireMockServer(options.port(testPort))
+    val source = new DeliusSource(s"http://localhost:$testPort/api", "NationalUser")
+
+    Given("the source API")
+    api.start()
+
+    When("the first page of the full Offender list is pulled from API")
+    val result = Await.result(source.pullAllIds(5, 1), 5.seconds)
+
+    Then("the first page of Offender Ids are retrieved")
+    result.error shouldBe None
+    result.page shouldBe 1
+    result.offenders shouldBe Seq("2500000501", "2500000502", "2500000503", "2500000504", "2500000505")
+
+    api.stop()
+  }
+
   //@TODO: Test Pull All Ids as well, And Logon as well
 
   override def afterAll() {

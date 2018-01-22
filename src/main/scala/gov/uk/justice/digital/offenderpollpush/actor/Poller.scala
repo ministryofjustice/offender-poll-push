@@ -20,6 +20,7 @@ class Poller @Inject() (source: BulkSource,
   private case class State(outstanding: Int, lastCohort: Option[DateTime])
 
   private val duration = timeout.seconds
+  private def puller = context.actorSelection("/user/Puller")
   private def paging = context.actorSelection("/user/Paging")
 
   override def preStart { self ! PullRequest }
@@ -33,27 +34,13 @@ class Poller @Inject() (source: BulkSource,
 
       if (allOffenders) {
 
-        log.info("Pulling Offender Ids ...")
-        source.pullAllIds.pipeTo(self)  //@TODO: Incorporate Pull All Paging calls
+        puller ! AllIdsRequest(1)
 
       } else {
 
         log.info("Pulling Offender Deltas ...")
         source.pullDeltas.pipeTo(self)
       }
-
-
-    case allIdsResult @ AllIdsResult(offenders, _) =>
-
-      log.info(s"Pulled ${offenders.length} Offender ID(s)")
-
-      allIdsResult match {  // State is not updated, so outstanding remains 0, so deleteCohort is correctly never called
-
-        case AllIdsResult(_, Some(error)) => log.warning(s"PULL ERROR: ${error.getMessage}")
-
-        case AllIdsResult(_, None) => for (request <- offenders.map(BuildRequest(_, DateTime.now))) paging ! request
-      }
-      //@TODO: Perform poison pill once finished to exit for all IDs
 
 
     case pullResult @ PullResult(deltas, _) =>

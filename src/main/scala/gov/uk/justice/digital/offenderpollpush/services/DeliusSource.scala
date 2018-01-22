@@ -39,6 +39,8 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
   private implicit val seqIdsUnmarshaller: Unmarshaller[HttpEntity, Seq[String]] = readUnmarshaller[Seq[String]]
   private implicit val seqJsonUnmarshaller: Unmarshaller[HttpEntity, Seq[SourceOffenderDelta]] = readUnmarshaller[Seq[SourceOffenderDelta]]
 
+  private implicit val offendersUnmarshaller: Unmarshaller[HttpEntity, SourceOffenders] = stringUnmarshaller().map(read[SourceOffenders]) //readUnmarshaller[SourceOffenders]
+
 
   private def makeRequest[T, R](transform: Unmarshal[HttpEntity] => Future[T],
                                 headers: List[HttpHeader],
@@ -65,6 +67,77 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
 
     }.recover { case error: Throwable => failure(error) }
   }
+
+  private def logon = //@TODO: Keep old one while valid for a while ... no need to logon each time. Shared state across threads though
+
+    makeRequest[String, List[HttpHeader]](
+      _.to[String],
+      List(),
+      s"$apiBaseUrl/logon",
+      bearerToken => List(Authorization(OAuth2BearerToken(bearerToken))),
+      error => {
+
+        logger.error(s"Login for $apiUsername failed", error)
+        List()
+      },
+      HttpMethods.POST,
+      apiUsername
+    )
+
+
+  override def pullDeltas: Future[PullResult] =
+
+    logon.flatMap { authHeaders =>
+
+      makeRequest[Seq[SourceOffenderDelta], PullResult](
+        _.to[Seq[SourceOffenderDelta]],
+        authHeaders,
+        s"$apiBaseUrl/offenderDeltaIds",
+        PullResult(_, None),
+        error => PullResult(Seq(), Some(error))
+      )
+    }
+
+  override def pullAllIds(pageSize: Int, page: Int): Future[AllIdsResult] =
+
+    logon.flatMap { authHeaders =>
+
+      makeRequest[SourceOffenders, AllIdsResult](
+        _.to[SourceOffenders],
+        authHeaders,
+        s"$apiBaseUrl/offenders/offenderIds?pageSize=$pageSize&page=$page",
+        source => AllIdsResult(page, source.offenderIds.map(_.toString), None),
+        error => AllIdsResult(page, Seq(), Some(error))
+      )
+    }
+
+  override def pull(id: String, cohort: DateTime): Future[BuildResult] =
+
+    logon.flatMap { authHeaders =>
+
+      makeRequest[String, BuildResult](
+        _.to[String],
+        authHeaders,
+        s"$apiBaseUrl/offenders/offenderId/$id",
+        json => BuildResult(TargetOffender(id, json, cohort), None),
+        error => BuildResult(TargetOffender(id, error.getMessage, cohort), Some(error))
+      )
+    }
+
+  override def deleteCohort(cohort: DateTime): Future[PurgeResult] =
+
+    logon.flatMap { authHeaders =>
+
+      makeRequest[String, PurgeResult](
+        _.to[String],
+        authHeaders,
+        s"$apiBaseUrl/offenderDeltaIds?before=${cohort.toString}",
+        _ => PurgeResult(cohort, None),
+        error => PurgeResult(cohort, Some(error)),
+        HttpMethods.DELETE
+      )
+    }
+}
 
 /*
   private var credentials: Future[List[HttpHeader]] = Future(List[HttpHeader]()) // will need sync for this to change it
@@ -105,74 +178,3 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
     }
   }
 */
-
-  private def logon = //@TODO: Keep old one while valid for a while ... no need to logon each time. Shared state across threads though
-
-    makeRequest[String, List[HttpHeader]](
-      _.to[String],
-      List(),
-      s"$apiBaseUrl/logon",
-      bearerToken => List(Authorization(OAuth2BearerToken(bearerToken))),
-      error => {
-
-        logger.error(s"Login for $apiUsername failed", error)
-        List()
-      },
-      HttpMethods.POST,
-      apiUsername
-    )
-
-
-  override def pullDeltas: Future[PullResult] =
-
-    logon.flatMap { authHeaders =>
-
-      makeRequest[Seq[SourceOffenderDelta], PullResult](
-        _.to[Seq[SourceOffenderDelta]],
-        authHeaders,
-        s"$apiBaseUrl/offenderDeltaIds",
-        PullResult(_, None),
-        error => PullResult(Seq(), Some(error))
-      )
-    }
-
-  override def pullAllIds: Future[AllIdsResult] =
-
-    logon.flatMap { authHeaders =>
-
-      makeRequest[Seq[String], AllIdsResult](
-        _.to[Seq[String]],
-        authHeaders,
-        s"$apiBaseUrl/allOffenderIds",
-        AllIdsResult(_, None),
-        error => AllIdsResult(Seq(), Some(error))
-      )
-    }
-
-  override def pull(id: String, cohort: DateTime): Future[BuildResult] =
-
-    logon.flatMap { authHeaders =>
-
-      makeRequest[String, BuildResult](
-        _.to[String],
-        authHeaders,
-        s"$apiBaseUrl/offenders/offenderId/$id",
-        json => BuildResult(TargetOffender(id, json, cohort), None),
-        error => BuildResult(TargetOffender(id, error.getMessage, cohort), Some(error))
-      )
-    }
-
-  override def deleteCohort(cohort: DateTime): Future[PurgeResult] =
-
-    logon.flatMap { authHeaders =>
-
-      makeRequest[String, PurgeResult](
-        _.to[String],
-        authHeaders,
-        s"$apiBaseUrl/offenderDeltaIds?before=${cohort.toString}",
-        _ => PurgeResult(cohort, None),
-        error => PurgeResult(cohort, Some(error)),
-        HttpMethods.DELETE
-      )
-    }
-}

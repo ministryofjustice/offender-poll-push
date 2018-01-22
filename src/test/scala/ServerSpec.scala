@@ -19,6 +19,12 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
 
   describe("Offender Delta Processing") {
 
+// pull all test
+/*
+    it("") {
+
+    }
+*/
     it("pulls an empty Offender Delta set from source and performs no processing") {
 
       Given("the source system has no offender deltas")
@@ -304,9 +310,9 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     runningService.terminate()
   }
 
-  private def runServerWithMockedServices(timeout: Int = 5) {
+  private def runServerWithMockedServices(allPullPageSize: Int = 5) {
 
-    runningService = Server.run(MockedConfiguration(mockBulkSource, mockSingleSource, mockSingleTarget, timeout))
+    runningService = Server.run(MockedConfiguration(mockBulkSource, mockSingleSource, mockSingleTarget, allPullPageSize))
   }
 
   private def mockBulkSourcePullDeltasOk(deltas: Seq[SourceOffenderDelta]) = when(mockBulkSource.pullDeltas).thenReturn(
