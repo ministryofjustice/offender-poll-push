@@ -47,7 +47,7 @@ class DeliusSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with 
       )
       verify(
         getRequestedFor(
-          urlEqualTo("/api/offenders/offenderId/123")).
+          urlEqualTo("/api/offenders/offenderId/123/all")).
           withHeader("Authorization", equalTo("Bearer ABCDEFGHIJKLMNOP"))
       )
       result.error.get.toString should include("404")
