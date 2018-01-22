@@ -153,8 +153,6 @@ class DeliusSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with 
     api.stop()
   }
 
-  //@TODO: Test Pull All Ids as well, And Logon as well
-
   override def afterAll() {
 
     system.terminate()

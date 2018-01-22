@@ -39,6 +39,3 @@ object Server extends App with Logging {
 
   run()
 }
-
-// Tests
-// normal operation loops polling and pushing deltas. Reindex option runs once only for all offender ids in entire db

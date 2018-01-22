@@ -30,4 +30,4 @@ class ElasticsearchTarget @Inject() (elasticSearchClient: RestHighLevelClient) e
   }
 }
 
-//@TODO: Tests
+//@TODO: End to end Tests

@@ -14,9 +14,6 @@ class Paging @Inject() (@Named("pageSize") pageSize: Int) extends Actor with Act
 
   override def receive: Receive = process(State(0, Seq()))
 
-//@TODO: Add paging TESTS - make page size 5 in tests, block 1, send 7, check only 5 pulls made until pull replies
-//@TODO: Also pull all with paging pulls into internal paging
-
   private def process(state: State): Receive = {
 
     case request @ BuildRequest(_, _) =>
@@ -80,3 +77,7 @@ class Paging @Inject() (@Named("pageSize") pageSize: Int) extends Actor with Act
       )
   }
 }
+
+//@TODO: Add paging TESTS - make page size 5 in tests, block 1, send 7, check only 5 pulls made until pull replies
+//@TODO: Also pull all with paging pulls into internal paging
+
