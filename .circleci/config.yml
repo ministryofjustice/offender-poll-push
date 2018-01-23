@@ -38,9 +38,15 @@ jobs:
             - ~/.m2
           key: v1-dependencies--{{ checksum "build.sbt" }}
 
+      - run:
+          name: Save the Jar
+          command: |
+              mkdir -p ./target/artifacts
+              mv target/scala-2.12/*.jar ./target/artifacts/
+
       - store_test_results:
           path: ./target/test-reports
 
       - store_artifacts:
-          path: ./target/scala-2.12
+          path: ./target/artifacts
           destination: jars
