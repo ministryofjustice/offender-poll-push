@@ -19,12 +19,37 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
 
   describe("Offender Delta Processing") {
 
-//@TODO: pull all test
-/*
-    it("") {
+    it("pulls the full Offender Id paged list, builds, and pushes to the target") {
 
+      val allIdPages = List(Seq("101", "102"), Seq("103", "104"), Seq("105"))
+
+      Given("the source system has 3 pages of All Ids")
+      when(mockBulkSource.pullAllIds(any[Int], any[Int])).thenAnswer { invocation => Future {
+
+        val page = invocation.getArgument[Int](1)
+
+        if (page > allIdPages.length)
+          AllIdsResult(page, Seq(), Some(new Exception(StatusCodes.NotFound.value)))
+        else
+          AllIdsResult(page, allIdPages(page - 1), None)
+        }
+      }
+      mockSingleSourcePullAnyOk()
+      mockSingleTargetPushAnyOk()
+
+      When("the service runs with a pull all page size of 2")
+      runServerWithMockedServices(Some(2))
+
+      Then("four pages of IDs are pulled containing 5 offenders which are build and pushed to target, and no deletions occur")
+      eventually(fiveSecondTimeout) {
+
+        verify(mockBulkSource, times(4)).pullAllIds(any[Int], any[Int])
+        verify(mockSingleSource, times(5)).pull(any[String], any[DateTime])
+        verify(mockSingleTarget, times(5)).push(any[TargetOffender])
+        verify(mockBulkSource, never()).deleteCohort(any[DateTime])
+      }
     }
-*/
+
     it("pulls an empty Offender Delta set from source and performs no processing") {
 
       Given("the source system has no offender deltas")
@@ -310,7 +335,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     runningService.terminate()
   }
 
-  private def runServerWithMockedServices(allPullPageSize: Int = 5) {
+  private def runServerWithMockedServices(allPullPageSize: Option[Int] = None) {
 
     runningService = Server.run(MockedConfiguration(mockBulkSource, mockSingleSource, mockSingleTarget, allPullPageSize))
   }

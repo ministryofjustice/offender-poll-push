@@ -27,6 +27,7 @@ class Configuration extends AbstractModule with ScalaModule {
     "INDEX_ALL_OFFENDERS" -> "false",
     "DELIUS_API_BASE_URL" -> "http://localhost:8080/api",
     "DELIUS_API_USERNAME" -> "unknown",
+    "ELASTIC_SEARCH_SCHEME" -> "http",
     "ELASTIC_SEARCH_HOST" -> "localhost",
     "ELASTIC_SEARCH_PORT" -> "9200",
     "ALL_PULL_PAGE_SIZE" -> "1000",
@@ -40,7 +41,8 @@ class Configuration extends AbstractModule with ScalaModule {
       Map(
         "apiBaseUrl" -> "DELIUS_API_BASE_URL",
         "apiUsername" -> "DELIUS_API_USERNAME",
-        "searchHost" -> "ELASTIC_SEARCH_HOST"
+        "searchHost" -> "ELASTIC_SEARCH_HOST",
+        "searchScheme" -> "ELASTIC_SEARCH_SCHEME"
       ),
       identity
     )

@@ -12,7 +12,7 @@ import scala.reflect.ClassTag
 
 object Server extends App with Logging {
 
-  logger.info("Started Offender PollPush Service ...")
+  logger.info(s"Started Offender PollPush Service [Version ${getClass.getPackage.getImplementationVersion}] ...")
 
   def run(config: Module = new Configuration) = {
 
