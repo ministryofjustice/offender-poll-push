@@ -1,8 +1,6 @@
 package gov.uk.justice.digital.offenderpollpush
 
 import akka.actor.ActorSystem
-import ch.qos.logback.classic.Level
-import com.google.inject.name.Names
 import com.google.inject.{Guice, Injector, Module}
 import gov.uk.justice.digital.offenderpollpush.actor._
 import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
@@ -18,11 +16,7 @@ object Server extends App with Logging {
     implicit val injector: Injector = Guice.createInjector(config)
     val system = injector.instance[ActorSystem]
 
-    (injector.instance[Boolean](Names.named("debugLog")), Logger.rootLogger.logger) match { // DEBUG_LOG=true
-
-      case (true, rootLogger: ch.qos.logback.classic.Logger) => rootLogger.setLevel(Level.DEBUG) // Set Logback to DEBUG if required
-      case _ =>
-    }
+    Logger.rootLogger.enableDebugIfRequired()
 
     system.startActor[Paging]
     system
