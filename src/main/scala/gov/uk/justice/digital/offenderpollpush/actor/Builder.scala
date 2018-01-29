@@ -1,16 +1,16 @@
 package gov.uk.justice.digital.offenderpollpush.actor
 
-import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
-import com.google.inject.Inject
+import com.google.inject.{Inject, Injector}
 import gov.uk.justice.digital.offenderpollpush.data.{BuildRequest, BuildResult, PushResult}
-import gov.uk.justice.digital.offenderpollpush.traits.SingleSource
+import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
+import gov.uk.justice.digital.offenderpollpush.traits.{LoggingActor, SingleSource}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Builder @Inject() (source: SingleSource) extends Actor with ActorLogging {
+class Builder @Inject() (source: SingleSource)(implicit injector: Injector) extends LoggingActor {
 
-  private def paging = context.actorSelection("/user/Paging")
-  private def pusher = context.actorSelection("/user/Pusher")
+  private def paging = context.parent
+  private val pusher = context.startActor[Pusher]
 
   override def receive: Receive = {
 

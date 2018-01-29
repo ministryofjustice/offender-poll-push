@@ -309,8 +309,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
   }
 
   //@TODO: Pull all set and check and test, change to paged and pull all count etc. Test exceptions ON PUSHER
-  //@TODO: Test DeliusSource and ElasticTarget. Test End to End integration
-  //@TODO: Test pull all
+  //@TODO: Test ElasticTarget. Test End to End integration
   //@TODO: change code to fit pull all paged
   //@TODO: Do some more   ... AND Integration with wiremock to API etc, AND end to end with wire mock etc etc
 

@@ -57,7 +57,7 @@ class DeliusSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with 
 
     it("GETs Offender from the API") {
 
-      val testPort = 8081
+      val testPort = 8082
 
       configureFor(testPort)
       val api = new WireMockServer(options.port(testPort))

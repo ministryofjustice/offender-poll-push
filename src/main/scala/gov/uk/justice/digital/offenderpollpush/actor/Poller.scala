@@ -1,18 +1,19 @@
 package gov.uk.justice.digital.offenderpollpush.actor
 
-import akka.actor.{Actor, ActorLogging}
 import akka.http.scaladsl.model.DateTime
 import akka.pattern.pipe
-import com.google.inject.Inject
+import com.google.inject.{Inject, Injector}
 import com.google.inject.name.Named
 import gov.uk.justice.digital.offenderpollpush.data._
-import gov.uk.justice.digital.offenderpollpush.traits.BulkSource
+import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
+import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, LoggingActor}
+
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class Poller @Inject() (source: BulkSource,
                         @Named("timeout") timeout: Int,
-                        @Named("allOffenders") allOffenders: Boolean) extends Actor with ActorLogging {
+                        @Named("allOffenders") allOffenders: Boolean)(implicit injector: Injector) extends LoggingActor {
 
   log.info(if (allOffenders) "Poller created to pull all offenders once" else s"Poller created to pull every $timeout seconds ...")
 
@@ -20,8 +21,9 @@ class Poller @Inject() (source: BulkSource,
   private case class State(outstanding: Int, lastCohort: Option[DateTime])
 
   private val duration = timeout.seconds
-  private def puller = context.actorSelection("/user/Puller")
-  private def paging = context.actorSelection("/user/Paging")
+
+  private def paging = context.parent
+  private lazy val puller = context.startActor[Puller]
 
   override def preStart { self ! PullRequest }
   override def receive: Receive = process(State(0, None))

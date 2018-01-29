@@ -1,13 +1,13 @@
 package gov.uk.justice.digital.offenderpollpush.actor
 
-import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import com.google.inject.Inject
 import gov.uk.justice.digital.offenderpollpush.data.{PushResult, TargetOffender}
-import gov.uk.justice.digital.offenderpollpush.traits.SingleTarget
+import gov.uk.justice.digital.offenderpollpush.traits.{LoggingActor, SingleTarget}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Pusher @Inject() (target: SingleTarget) extends Actor with ActorLogging {
+class Pusher @Inject() (target: SingleTarget) extends LoggingActor {
 
   private def paging = context.actorSelection("/user/Paging")
 

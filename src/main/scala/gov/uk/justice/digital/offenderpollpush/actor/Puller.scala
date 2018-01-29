@@ -1,16 +1,16 @@
 package gov.uk.justice.digital.offenderpollpush.actor
 
-import akka.actor.{Actor, ActorLogging}
 import akka.http.scaladsl.model.DateTime
 import akka.pattern.pipe
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import gov.uk.justice.digital.offenderpollpush.data.{AllIdsRequest, AllIdsResult, BuildRequest}
-import gov.uk.justice.digital.offenderpollpush.traits.BulkSource
+import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, LoggingActor}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class Puller @Inject() (source: BulkSource,
-                        @Named("allPullPageSize") allPullPageSize: Int) extends Actor with ActorLogging {
+                        @Named("allPullPageSize") allPullPageSize: Int) extends LoggingActor {
 
   private def paging = context.actorSelection("/user/Paging")
 
@@ -39,5 +39,3 @@ class Puller @Inject() (source: BulkSource,
       }
   }
 }
-
-//@TODO: Perform poison pill once finished to exit for all IDs

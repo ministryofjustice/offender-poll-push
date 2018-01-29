@@ -1,16 +1,21 @@
 package gov.uk.justice.digital.offenderpollpush.actor
 
-import akka.actor.{Actor, ActorLogging}
-import com.google.inject.Inject
+import com.google.inject.{Inject, Injector}
 import com.google.inject.name.Named
 import gov.uk.justice.digital.offenderpollpush.data.{BuildRequest, PushResult, TargetOffender}
+import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
+import gov.uk.justice.digital.offenderpollpush.traits.LoggingActor
+import grizzled.slf4j.Logging
 
-class Paging @Inject() (@Named("pageSize") pageSize: Int) extends Actor with ActorLogging {
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class Paging @Inject() (@Named("pageSize") pageSize: Int,
+                        @Named("allOffenders") allOffenders: Boolean)(implicit injector: Injector) extends LoggingActor with Logging {
 
   private case class State(currentPage: Int, waitingPages: Seq[Seq[BuildRequest]])
 
-  private def poller = context.actorSelection("/user/Poller")
-  private def builder = context.actorSelection("/user/Builder")
+  private val poller = context.startActor[Poller]
+  private val builder = context.startActor[Builder]
 
   override def receive: Receive = process(State(0, Seq()))
 
@@ -71,10 +76,23 @@ class Paging @Inject() (@Named("pageSize") pageSize: Int) extends Actor with Act
 
           } else {  // No current page left and none waiting
 
+            if (allOffenders) {
+              log.info("Stopping Akka Actors ...")
+              context.stop(self)
+            }
+
             State(0, Seq())
           }
         }
       )
+  }
+
+  override def postStop() {
+
+    super.postStop()
+    log.info("Stopping Akka Actor System ...")
+
+    context.system.terminate().foreach(_ => logger.info("Akka Actor System Terminated")) // Log using non-Actor Logging as Actor System terminated
   }
 }
 
