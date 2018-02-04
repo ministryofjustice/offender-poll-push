@@ -11,7 +11,7 @@ import org.elasticsearch.client.{RestClientBuilder, RestHighLevelClient}
 import org.json4s.Formats
 import scala.util.Properties
 
-class Configuration extends AbstractModule with ScalaModule {
+class Configuration extends ScalaModule {
 
   private def envOrDefault(key: String) = Properties.envOrElse(key, envDefaults(key))
 
@@ -21,6 +21,8 @@ class Configuration extends AbstractModule with ScalaModule {
 
     for ((name, value) <- map.mapValues(envOrDefault).mapValues(transform)) bindNamedValue(name, value)
   }
+
+  def allSettings: Map[String, String] = envDefaults.keys.map { key => (key, envOrDefault(key)) }.toMap
 
   protected def envDefaults = Map(
     "DEBUG_LOG" -> "false",

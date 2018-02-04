@@ -11,7 +11,9 @@ object Server extends App with Logging {
 
   logger.info(s"Started Offender PollPush Service [Version ${getClass.getPackage.getImplementationVersion}] ...")
 
-  def run(config: Module = new Configuration) = {
+  def run(config: Configuration = new Configuration) = {
+
+    for ((key, value) <- config.allSettings) logger.info(s"Configuration setting - $key: $value")
 
     implicit val injector: Injector = Guice.createInjector(config)
     val system = injector.instance[ActorSystem]
