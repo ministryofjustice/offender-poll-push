@@ -13,7 +13,7 @@ class Pusher @Inject() (target: SingleTarget) extends LoggingActor {
 
   override def receive: Receive = {
 
-    case targetOffender @ TargetOffender(id, _, cohort) =>
+    case targetOffender @ TargetOffender(id, _, cohort, _) =>
 
       log.info(s"Pushing Offender ID: $id of Delta Cohort: $cohort")
       target.push(targetOffender).pipeTo(self)
