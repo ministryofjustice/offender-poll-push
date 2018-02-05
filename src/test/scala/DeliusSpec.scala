@@ -72,7 +72,7 @@ class DeliusSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with 
 
       Then("the API receives a HTTP GET call with Authorization and returns the Offender Delta Ids and timestamps")
       result.error shouldBe None
-      result.offender shouldBe TargetOffender("456", "{\"some\":\"json\"}", dateNow)
+      result.offender shouldBe TargetOffender("456", "{\"some\":\"json\"}", dateNow, deletion = false)
 
       api.stop()
     }
@@ -102,9 +102,10 @@ class DeliusSpec extends FunSpec with BeforeAndAfterAll with GivenWhenThen with 
       )
 
       result shouldBe PullResult(Seq(
-        SourceOffenderDelta("2500160158", DateTime.fromIsoDateTimeString("2018-01-18T15:35:13").get),
-        SourceOffenderDelta("2500160156", DateTime.fromIsoDateTimeString("2018-01-18T15:35:35").get),
-        SourceOffenderDelta("2500160158", DateTime.fromIsoDateTimeString("2018-01-18T15:36:36").get)
+        SourceOffenderDelta("2500160158", DateTime.fromIsoDateTimeString("2018-01-18T15:35:13").get, "UPSERT"),
+        SourceOffenderDelta("2500160156", DateTime.fromIsoDateTimeString("2018-01-18T15:35:35").get, "UPSERT"),
+        SourceOffenderDelta("2500160158", DateTime.fromIsoDateTimeString("2018-01-18T15:35:35").get, "DELETE"),
+        SourceOffenderDelta("2500160158", DateTime.fromIsoDateTimeString("2018-01-18T15:36:36").get, "UPSERT")
       ), None)
 
       api.stop()

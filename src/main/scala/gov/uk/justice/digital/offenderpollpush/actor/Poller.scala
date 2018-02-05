@@ -25,7 +25,7 @@ class Poller @Inject() (source: BulkSource,
   private def paging = context.parent
   private lazy val puller = context.startActor[Puller]
 
-  override def preStart { self ! PullRequest }
+  override def preStart() { self ! PullRequest }
   override def receive: Receive = process(State(0, None))
 
   private def schedulePullRequest() = context.system.scheduler.scheduleOnce(duration, self, PullRequest)
@@ -55,13 +55,24 @@ class Poller @Inject() (source: BulkSource,
           case PullResult(Seq(_, _*), None) =>  // At least one result and no Error
 
             val cohort = deltas.map(_.dateChanged).max
-            val uniqueIds = deltas.map(_.offenderId).distinct
 
-            log.info(s"Cohort $cohort contains ${uniqueIds.length} unique Offender Delta Id(s)")
+            def processRequests(uniqueIds: Seq[String], deletion: Boolean = false) {
 
-            for (request <- uniqueIds.map(BuildRequest(_, cohort))) paging ! request
+              for (request <- uniqueIds.map(ProcessRequest(_, cohort, deletion))) paging ! request
+            }
 
-            State(state.outstanding + uniqueIds.length, Some(cohort))  // Replace None or older cohort with latest cohort
+            val actionUniqueIds = deltas.groupBy(_.action).mapValues(_.map(_.offenderId).distinct)
+
+            val deleteUniqueIds = actionUniqueIds.getOrElse("DELETE", Seq())
+            val upsertUniqueIds = actionUniqueIds.getOrElse("UPSERT", Seq()).filterNot(deleteUniqueIds.contains(_)) // Deletes trump any upserts
+
+            log.info(s"Cohort $cohort contains ${upsertUniqueIds.length} unique UPSERT Offender Delta Id(s)")
+            log.info(s"Cohort $cohort contains ${deleteUniqueIds.length} unique DELETE Offender Delta Id(s)")
+
+            processRequests(upsertUniqueIds)
+            processRequests(deleteUniqueIds, deletion = true)
+
+            State(state.outstanding + upsertUniqueIds.length + deleteUniqueIds.length, Some(cohort))  // Replace None or older cohort with latest cohort
 
           case _ => // PullResult(Seq(), None) or PullResult(_, Some(error))
 
@@ -73,7 +84,7 @@ class Poller @Inject() (source: BulkSource,
       )
 
 
-    case PushResult(TargetOffender(id, _, cohort), _, _, _) =>
+    case PushResult(TargetOffender(id, _, cohort, _), _, _, _) =>
 
       if (state.outstanding > 0) {
 

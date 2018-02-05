@@ -11,15 +11,23 @@
     "jsonBody": [
       {
         "offenderId": 2500160158,
-        "dateChanged": "2018-01-18T15:35:13"
+        "dateChanged": "2018-01-18T15:35:13",
+        "action": "UPSERT"
       },
       {
         "offenderId": 2500160156,
-        "dateChanged": "2018-01-18T15:35:35"
+        "dateChanged": "2018-01-18T15:35:35",
+        "action": "UPSERT"
       },
       {
         "offenderId": 2500160158,
-        "dateChanged": "2018-01-18T15:36:36"
+        "dateChanged": "2018-01-18T15:35:35",
+        "action": "DELETE"
+      },
+      {
+        "offenderId": 2500160158,
+        "dateChanged": "2018-01-18T15:36:36",
+        "action": "UPSERT"
       }
     ],
     "fixedDelayMilliseconds": 1000

@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.DateTime
 import akka.pattern.pipe
 import com.google.inject.Inject
 import com.google.inject.name.Named
-import gov.uk.justice.digital.offenderpollpush.data.{AllIdsRequest, AllIdsResult, BuildRequest}
+import gov.uk.justice.digital.offenderpollpush.data.{AllIdsRequest, AllIdsResult, ProcessRequest}
 import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, LoggingActor}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,7 +33,7 @@ class Puller @Inject() (source: BulkSource,
 
         case AllIdsResult(_, _, None) =>
 
-          for (request <- offenders.map(BuildRequest(_, DateTime.now))) paging ! request
+          for (request <- offenders.map(ProcessRequest(_, DateTime.now, deletion = false))) paging ! request
 
           self ! AllIdsRequest(page + 1)
       }

@@ -89,7 +89,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     it("pulls an Offender Delta from source, builds, and pushes to target") {
 
       val dateTimeNow = DateTime.now
-      val offenderDelta = SourceOffenderDelta("123", dateTimeNow)
+      val offenderDelta = SourceOffenderDelta("123", dateTimeNow, "UPSERT")
 
       Given("the source system has an offender deltas")
       mockBulkSourcePullDeltasOk(Seq(offenderDelta))
@@ -105,7 +105,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
 
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(1)).pull(offenderDelta.offenderId, dateTimeNow)
-        verify(mockSingleTarget, times(1)).push(offenderDelta.targetOffender)
+        verify(mockSingleTarget, times(1)).push(offenderDelta.targetOffender())
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -113,8 +113,8 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     it("pulls two Offender Deltas from source, builds them, and pushes to target") {
 
       val dateTimeNow = DateTime.now
-      val offenderDelta1 = SourceOffenderDelta("123", dateTimeNow)
-      val offenderDelta2 = SourceOffenderDelta("456", dateTimeNow)
+      val offenderDelta1 = SourceOffenderDelta("123", dateTimeNow, "UPSERT")
+      val offenderDelta2 = SourceOffenderDelta("456", dateTimeNow, "UPSERT")
 
       Given("the source system has two offender deltas")
       mockBulkSourcePullDeltasOk(Seq(offenderDelta1, offenderDelta2))
@@ -133,8 +133,8 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockSingleSource, times(1)).pull(offenderDelta1.offenderId, dateTimeNow)
         verify(mockSingleSource, times(1)).pull(offenderDelta2.offenderId, dateTimeNow)
         verify(mockSingleTarget, times(2)).push(any[TargetOffender])
-        verify(mockSingleTarget, times(1)).push(offenderDelta1.targetOffender)
-        verify(mockSingleTarget, times(1)).push(offenderDelta2.targetOffender)
+        verify(mockSingleTarget, times(1)).push(offenderDelta1.targetOffender())
+        verify(mockSingleTarget, times(1)).push(offenderDelta2.targetOffender())
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -142,7 +142,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     it("pulls six Offender Deltas from source containing four unique ids, builds them, and pushes to target") {
 
       val dateTimeNow = DateTime.now
-      val offenderDeltas = Seq("123", "456", "789", "456", "456", "000").map(SourceOffenderDelta(_, dateTimeNow))
+      val offenderDeltas = Seq("123", "456", "789", "456", "456", "000").map(SourceOffenderDelta(_, dateTimeNow, "UPSERT"))
 
       Given("the source system has six offender deltas of which four are unique")
       mockBulkSourcePullDeltasOk(offenderDeltas)
@@ -153,12 +153,36 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
       When("the service runs")
       runServerWithMockedServices()
 
-      Then("the four uninque offenders are built, copied to the target system, and the source cohort deleted")
+      Then("the four unique offenders are built, copied to the target system, and the source cohort deleted")
       eventually(fiveSecondTimeout) {
 
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(4)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(4)).push(any[TargetOffender])
+        verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
+      }
+    }
+
+    it("pulls three Offender Deltas from source containing two unique ids including a DELETE, builds UPSERTS only, and pushes to target") {
+
+      val dateTimeNow = DateTime.now
+      val offenderDeltas = Seq(("123", "UPSERT"), ("456", "UPSERT"), ("123", "DELETE")).map(d => SourceOffenderDelta(d._1, dateTimeNow, d._2))
+
+      Given("the source system has three offender deltas of which two are unique and one id has an UPSERT and a DELETE")
+      mockBulkSourcePullDeltasOk(offenderDeltas)
+      mockSingleSourcePullAnyOk()
+      mockSingleTargetPushAnyOk()
+      mockBulkSourceDeleteCohortAnyOk()
+
+      When("the service runs")
+      runServerWithMockedServices()
+
+      Then("one offender is built, two are pushed to target including a delete, and the source cohort deleted")
+      eventually(fiveSecondTimeout) {
+
+        verify(mockBulkSource, times(1)).pullDeltas
+        verify(mockSingleSource, times(1)).pull(any[String], any[DateTime])
+        verify(mockSingleTarget, times(2)).push(any[TargetOffender])
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -170,9 +194,9 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
       var dateTimeSecond: DateTime = null
       val slowFirstDeltaBuildResult = Promise[BuildResult]
       val firstDeltaIds = Seq("123", "456", "789")
-      val firstDeltaSet = firstDeltaIds.map(SourceOffenderDelta(_, dateTimeFirst))
+      val firstDeltaSet = firstDeltaIds.map(SourceOffenderDelta(_, dateTimeFirst, "UPSERT"))
       val secondDeltaIds = Seq("234", "567", "890", "123")
-      val slowFirstDeltaTargetOffender = TargetOffender("456", "", dateTimeFirst)
+      val slowFirstDeltaTargetOffender = TargetOffender("456", "", dateTimeFirst, deletion = false)
 
       Given("the source system contains a first Delta of 3 Offenders of which 1 Offender taks a long time to build")
       when(mockBulkSource.pullDeltas).thenAnswer { _ => Future {
@@ -184,7 +208,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
           dateTimeSecond = DateTime.now
 
           secondDeltaIds.foreach(mockSingleSourcePullIdOk(_, dateTimeSecond))
-          secondDeltaIds.map(SourceOffenderDelta(_, dateTimeSecond))
+          secondDeltaIds.map(SourceOffenderDelta(_, dateTimeSecond, "UPSERT"))
 
         } else {
 
@@ -223,7 +247,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     it("pulls Offender Deltas from source multiple times over time, builds them, and pushes to target") {
 
       Given("the source system has two offender deltas")
-      when(mockBulkSource.pullDeltas).thenAnswer { _ => Future { PullResult(Seq("345", "678").map(SourceOffenderDelta(_, DateTime.now)), None) }}
+      when(mockBulkSource.pullDeltas).thenAnswer { _ => Future { PullResult(Seq("345", "678").map(SourceOffenderDelta(_, DateTime.now, "UPSERT")), None) }}
       mockSingleSourcePullAnyOk()
       mockSingleTargetPushAnyOk()
       mockBulkSourceDeleteCohortAnyOk()
@@ -244,9 +268,9 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     it("pulls Offender Deltas with different dates and uses the latest date as the Delta Cohort") {
 
       val dateTimeNow = DateTime.now
-      val offenderDelta1 = SourceOffenderDelta("123", dateTimeNow.minus(2500))
-      val offenderDelta2 = SourceOffenderDelta("456", dateTimeNow)
-      val offenderDelta3 = SourceOffenderDelta("789", dateTimeNow.minus(5000))
+      val offenderDelta1 = SourceOffenderDelta("123", dateTimeNow.minus(2500), "UPSERT")
+      val offenderDelta2 = SourceOffenderDelta("456", dateTimeNow, "UPSERT")
+      val offenderDelta3 = SourceOffenderDelta("789", dateTimeNow.minus(5000), "UPSERT")
 
       Given("the source system has three offender deltas with different date times")
       mockBulkSourcePullDeltasOk(Seq(offenderDelta1, offenderDelta2, offenderDelta3))
@@ -290,7 +314,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
       val dateTimeNow = DateTime.now
 
       Given("the source system an offender deltas that fails to build")
-      mockBulkSourcePullDeltasOk(Seq(SourceOffenderDelta("123", dateTimeNow)))
+      mockBulkSourcePullDeltasOk(Seq(SourceOffenderDelta("123", dateTimeNow, "UPSERT")))
       mockSingleSourcePullAnyError(new Exception("Error"))
       mockBulkSourceDeleteCohortAnyOk()
 
@@ -349,19 +373,19 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     Future { PullResult(Seq(), Some(error)) }
   )
 
-  private def mockSingleSourcePullIdOk(id: String, cohort: DateTime) = when(mockSingleSource.pull(id, cohort)).thenReturn(
+  private def mockSingleSourcePullIdOk(id: String, cohort: DateTime, deletion: Boolean = false) = when(mockSingleSource.pull(id, cohort)).thenReturn(
 
-    Future { BuildResult(TargetOffender(id, "", cohort), None) }
+    Future { BuildResult(TargetOffender(id, "", cohort, deletion), None) }
   )
 
-  private def mockSingleSourcePullAnyOk() = when(mockSingleSource.pull(any[String], any[DateTime])).thenAnswer { invocation =>
+  private def mockSingleSourcePullAnyOk(deletion: Boolean = false) = when(mockSingleSource.pull(any[String], any[DateTime])).thenAnswer { invocation =>
 
-    Future { BuildResult(TargetOffender(invocation.getArgument[String](0), "", invocation.getArgument[DateTime](1)), None) }
+    Future { BuildResult(TargetOffender(invocation.getArgument[String](0), "", invocation.getArgument[DateTime](1), deletion), None) }
   }
 
-  private def mockSingleSourcePullAnyError(error: Throwable) = when(mockSingleSource.pull(any[String], any[DateTime])).thenAnswer { invocation =>
+  private def mockSingleSourcePullAnyError(error: Throwable, deletion: Boolean = false) = when(mockSingleSource.pull(any[String], any[DateTime])).thenAnswer { invocation =>
 
-    Future { BuildResult(TargetOffender(invocation.getArgument[String](0), "", invocation.getArgument[DateTime](1)), Some(error)) }
+    Future { BuildResult(TargetOffender(invocation.getArgument[String](0), "", invocation.getArgument[DateTime](1), deletion), Some(error)) }
   }
 
   private def mockSingleTargetPushAnyOk() = when(mockSingleTarget.push(any[TargetOffender])).thenAnswer { invocation =>

@@ -119,8 +119,8 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
         _.to[String],
         authHeaders,
         s"$apiBaseUrl/offenders/offenderId/$id/all",
-        json => BuildResult(TargetOffender(id, json, cohort), None),
-        error => BuildResult(TargetOffender(id, error.getMessage, cohort), Some(error))
+        json => BuildResult(TargetOffender(id, json, cohort, deletion = false), None),
+        error => BuildResult(TargetOffender(id, error.getMessage, cohort, deletion = false), Some(error))
       )
     }
 

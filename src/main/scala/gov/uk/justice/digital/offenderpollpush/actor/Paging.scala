@@ -2,7 +2,7 @@ package gov.uk.justice.digital.offenderpollpush.actor
 
 import com.google.inject.{Inject, Injector}
 import com.google.inject.name.Named
-import gov.uk.justice.digital.offenderpollpush.data.{BuildRequest, PushResult, TargetOffender}
+import gov.uk.justice.digital.offenderpollpush.data.{ProcessRequest, PushResult}
 import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
 import gov.uk.justice.digital.offenderpollpush.traits.LoggingActor
 import grizzled.slf4j.Logging
@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class Paging @Inject() (@Named("pageSize") pageSize: Int,
                         @Named("allOffenders") allOffenders: Boolean)(implicit injector: Injector) extends LoggingActor with Logging {
 
-  private case class State(currentPage: Int, waitingPages: Seq[Seq[BuildRequest]])
+  private case class State(currentPage: Int, waitingPages: Seq[Seq[ProcessRequest]])
 
   private val poller = context.startActor[Poller]
   private val builder = context.startActor[Builder]
@@ -21,7 +21,7 @@ class Paging @Inject() (@Named("pageSize") pageSize: Int,
 
   private def process(state: State): Receive = {
 
-    case request @ BuildRequest(_, _) =>
+    case request: ProcessRequest =>
 
       context become process(
         if (state.waitingPages.isEmpty) {    // Current page only and nothing queued
@@ -55,7 +55,7 @@ class Paging @Inject() (@Named("pageSize") pageSize: Int,
         }
       )
 
-    case result @ PushResult(TargetOffender(id, _, cohort), _, _, _) =>
+    case result: PushResult =>
 
       poller ! result
 

@@ -5,9 +5,11 @@ import gov.uk.justice.digital.offenderpollpush.data.{PushResult, TargetOffender}
 import gov.uk.justice.digital.offenderpollpush.helpers.FutureListener
 import gov.uk.justice.digital.offenderpollpush.traits.SingleTarget
 import grizzled.slf4j.Logging
+import org.elasticsearch.action.delete.{DeleteRequest, DeleteResponse}
 import org.elasticsearch.action.index.{IndexRequest, IndexResponse}
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.common.xcontent.XContentType
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -15,14 +17,27 @@ class ElasticsearchTarget @Inject() (elasticSearchClient: RestHighLevelClient) e
 
   override def push(offender: TargetOffender): Future[PushResult] = {
 
-    val listener = FutureListener[IndexResponse]
-    val request = new IndexRequest("offender", "document", offender.id).source(offender.json, XContentType.JSON)
+    (if (offender.deletion) {
 
-    logger.debug(s"Sending to Elastic Search: ${offender.json}")
+      val listener = FutureListener[DeleteResponse]
+      val request = new DeleteRequest("offender", "document", offender.id)
 
-    elasticSearchClient.indexAsync(request, listener)
+      logger.debug(s"Deleting from Elastic Search: ${offender.id}")
 
-    listener.future.map { response =>
+      elasticSearchClient.deleteAsync(request, listener)
+      listener
+
+    } else {
+
+      val listener = FutureListener[IndexResponse]
+      val request = new IndexRequest("offender", "document", offender.id).source(offender.json, XContentType.JSON)
+
+      logger.debug(s"Sending to Elastic Search: ${offender.json}")
+
+      elasticSearchClient.indexAsync(request, listener)
+      listener
+
+    }).future.map { response =>
 
       PushResult(offender, Some(response.status.getStatus), response.toString, None)
 

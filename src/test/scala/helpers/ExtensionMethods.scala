@@ -6,7 +6,7 @@ object ExtensionMethods {
 
   implicit class StubTargetOffender(source: SourceOffenderDelta) {
 
-    def targetOffender = TargetOffender(source.offenderId, "", source.dateChanged)
+    def targetOffender(deletion: Boolean = false) = TargetOffender(source.offenderId, "", source.dateChanged, deletion)
   }
 
 }

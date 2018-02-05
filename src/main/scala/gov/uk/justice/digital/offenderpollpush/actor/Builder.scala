@@ -2,9 +2,10 @@ package gov.uk.justice.digital.offenderpollpush.actor
 
 import akka.pattern.pipe
 import com.google.inject.{Inject, Injector}
-import gov.uk.justice.digital.offenderpollpush.data.{BuildRequest, BuildResult, PushResult}
+import gov.uk.justice.digital.offenderpollpush.data.{BuildResult, ProcessRequest, PushResult, TargetOffender}
 import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
 import gov.uk.justice.digital.offenderpollpush.traits.{LoggingActor, SingleSource}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class Builder @Inject() (source: SingleSource)(implicit injector: Injector) extends LoggingActor {
@@ -14,10 +15,18 @@ class Builder @Inject() (source: SingleSource)(implicit injector: Injector) exte
 
   override def receive: Receive = {
 
-    case BuildRequest(id, cohort) =>
+    case ProcessRequest(id, cohort, deletion) =>
 
-      log.info(s"Pulling Offender ID: $id of Delta Cohort: $cohort")
-      source.pull(id, cohort).pipeTo(self)
+      if (deletion) {
+
+        log.info(s"Deleting Offender ID: $id of Delta Cohort: $cohort")
+        pusher ! TargetOffender(id, "", cohort, deletion)
+
+      } else {
+
+        log.info(s"Pulling Offender ID: $id of Delta Cohort: $cohort")
+        source.pull(id, cohort).pipeTo(self)
+      }
 
 
     case buildResult @ BuildResult(offender, _) =>
