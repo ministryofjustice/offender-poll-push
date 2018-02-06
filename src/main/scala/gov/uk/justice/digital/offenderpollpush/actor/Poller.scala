@@ -25,7 +25,12 @@ class Poller @Inject() (source: BulkSource,
   private def paging = context.parent
   private lazy val puller = context.startActor[Puller]
 
-  override def preStart() { self ! PullRequest }
+  override def preStart() {
+
+    super.preStart()
+    self ! PullRequest
+  }
+
   override def receive: Receive = process(State(0, None))
 
   private def schedulePullRequest() = context.system.scheduler.scheduleOnce(duration, self, PullRequest)
