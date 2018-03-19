@@ -27,6 +27,7 @@ class Configuration extends ScalaModule {
   protected def envDefaults = Map(
     "DEBUG_LOG" -> "false",
     "INDEX_ALL_OFFENDERS" -> "false",
+    "INGESTION_PIPELINE" -> "pnc-pipeline",
     "DELIUS_API_BASE_URL" -> "http://localhost:8080/api",
     "DELIUS_API_USERNAME" -> "unknown",
     "ELASTIC_SEARCH_SCHEME" -> "http",
@@ -44,7 +45,8 @@ class Configuration extends ScalaModule {
         "apiBaseUrl" -> "DELIUS_API_BASE_URL",
         "apiUsername" -> "DELIUS_API_USERNAME",
         "searchHost" -> "ELASTIC_SEARCH_HOST",
-        "searchScheme" -> "ELASTIC_SEARCH_SCHEME"
+        "searchScheme" -> "ELASTIC_SEARCH_SCHEME",
+        "ingestionPipeline" -> "INGESTION_PIPELINE"
       ),
       identity
     )

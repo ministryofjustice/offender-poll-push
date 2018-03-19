@@ -32,13 +32,36 @@ The pull/push functionality is unit tested via dependency-injected mock APIs. Th
 
 The poller pushes to an Elastic Search index named 'offender' which is assumed to be present.
 
-The index can be created on an ES cluster with a curl command:
+Ingested JSON Documents are processed on insertion by ElasticSearch to handle special search cases such as partial PNC numbers. The pipeline is created in the ES cluster with a curl command:
+```
+curl -XPUT 'elastic-search-lb:9200/_ingest/pipeline/pnc-pipeline?pretty' -H 'Content-Type: application/json' -d'
+{
+  "description" : "PNC processing",
+  "processors": [
+      {
+        "script" : {
+          "inline" : "ctx.otherIds.pncNumberRhs = ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf('/') + 1)",
+          "ignore_failure": true
+        }
+      },
+      {
+        "script" : {
+          "inline" : "ctx.otherIds.pncNumberShort = ctx.otherIds.pncNumber.substring(2)",
+          "ignore_failure": true
+        }
+      }
+    ]
+}
+'
+```
+
+The index can also be created on an ES cluster with a curl command:
 ```
 curl -XPUT 'elastic-search-lb:9200/offender?pretty' -H 'Content-Type: application/json' -d'
 {
     "settings" : {
         "index" : {
-            "number_of_shards" : 6, 
+            "number_of_shards" : 10,
             "number_of_replicas" : 1 
         }
     },
@@ -48,7 +71,10 @@ curl -XPUT 'elastic-search-lb:9200/offender?pretty' -H 'Content-Type: applicatio
           "dateOfBirth": {
             "type":   "date",
             "format": "yyyy-MM-dd||yyyy/MM/dd||dd-MM-yy||dd/MM/yy||dd-MM-yyyy||dd/MM/yyyy"
-          }
+          },
+          "otherIds.pncNumber": {"type": "keyword"},
+          "otherIds.pncNumberRhs": {"type": "keyword"},
+          "otherIds.pncNumberShort": {"type": "keyword"}
         }
       }
     }
