@@ -36,20 +36,22 @@ Ingested JSON Documents are processed on insertion by ElasticSearch to handle sp
 ```
 curl -XPUT 'elastic-search-lb:9200/_ingest/pipeline/pnc-pipeline?pretty' -H 'Content-Type: application/json' -d'
 {
-  "description" : "PNC processing",
+  "description" : "PNC munger",
   "processors": [
       {
         "script" : {
-          "inline" : "ctx.otherIds.pncNumberRhs = ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf('/') + 1)",
+          "inline" : "ctx.otherIds.pncNumberLongYear = ctx.otherIds.pncNumber.substring(0, ctx.otherIds.pncNumber.lastIndexOf('/')  + 1) + Integer.parseInt(ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf('/') + 1, ctx.otherIds.pncNumber.length() - 1)) + ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.length() -1)",
           "ignore_failure": true
         }
-      },
+      }, 
       {
         "script" : {
-          "inline" : "ctx.otherIds.pncNumberShort = ctx.otherIds.pncNumber.substring(2)",
+          "inline" : "ctx.otherIds.pncNumberShortYear = (ctx.otherIds.pncNumber.substring(0, ctx.otherIds.pncNumber.lastIndexOf('/')  + 1) + Integer.parseInt(ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf('/') + 1, ctx.otherIds.pncNumber.length() - 1)) + ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.length() -1)).substring(2)",
           "ignore_failure": true
-        }
-      }
+        }   
+      },
+      {"lowercase": {"field": "otherIds.pncNumberLongYear", "ignore_missing": true}},
+      {"lowercase": {"field": "otherIds.pncNumberShortYear", "ignore_missing": true}}
     ]
 }
 '
@@ -61,22 +63,22 @@ curl -XPUT 'elastic-search-lb:9200/offender?pretty' -H 'Content-Type: applicatio
 {
     "settings" : {
         "index" : {
-            "number_of_shards" : 10,
+            "number_of_shards" : 6, 
             "number_of_replicas" : 1 
         }
     },
     "mappings": {
-      "document": {
+        "document": {
         "properties": {
-          "dateOfBirth": {
-            "type":   "date",
-            "format": "yyyy-MM-dd||yyyy/MM/dd||dd-MM-yy||dd/MM/yy||dd-MM-yyyy||dd/MM/yyyy"
-          },
-          "otherIds.pncNumber": {"type": "keyword"},
-          "otherIds.pncNumberRhs": {"type": "keyword"},
-          "otherIds.pncNumberShort": {"type": "keyword"}
+            "otherIds.croNumber": {"type": "keyword"},
+		    "otherIds.pncNumberLongYear": {"type": "keyword"},
+		    "otherIds.pncNumberShortYear": {"type": "keyword"},
+            "dateOfBirth": {
+              "type":   "date",
+              "format": "yyyy-MM-dd||yyyy/MM/dd||dd-MM-yy||dd/MM/yy||dd-MM-yyyy||dd/MM/yyyy"
+            }
         }
-      }
+        }
     }
 }
 '
