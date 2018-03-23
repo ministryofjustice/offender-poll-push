@@ -50,7 +50,7 @@ curl -XPUT 'elastic-search-lb:9200/_ingest/pipeline/pnc-pipeline?pretty' -H 'Con
           "ignore_failure": true
         }   
       },
-      {"lowercase": {"field": "otherIds.croNumber", "ignore_missing": true}},
+      {"lowercase": {"field": "otherIds.croNumber", "target_field": "otherIds.croNumberLowercase", "ignore_missing": true}},
       {"lowercase": {"field": "otherIds.pncNumberLongYear", "ignore_missing": true}},
       {"lowercase": {"field": "otherIds.pncNumberShortYear", "ignore_missing": true}}
     ]
@@ -71,7 +71,7 @@ curl -XPUT 'elastic-search-lb:9200/offender?pretty' -H 'Content-Type: applicatio
     "mappings": {
         "document": {
         "properties": {
-            "otherIds.croNumber": {"type": "keyword"},
+            "otherIds.croNumberLowercase": {"type": "keyword"},
 		    "otherIds.pncNumberLongYear": {"type": "keyword"},
 		    "otherIds.pncNumberShortYear": {"type": "keyword"},
             "dateOfBirth": {
