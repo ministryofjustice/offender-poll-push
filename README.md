@@ -50,6 +50,7 @@ curl -XPUT 'elastic-search-lb:9200/_ingest/pipeline/pnc-pipeline?pretty' -H 'Con
           "ignore_failure": true
         }   
       },
+      {"lowercase": {"field": "otherIds.croNumber", "ignore_missing": true}},
       {"lowercase": {"field": "otherIds.pncNumberLongYear", "ignore_missing": true}},
       {"lowercase": {"field": "otherIds.pncNumberShortYear", "ignore_missing": true}}
     ]
