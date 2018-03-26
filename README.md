@@ -64,7 +64,7 @@ curl -XPUT 'elastic-search-lb:9200/offender?pretty' -H 'Content-Type: applicatio
 {
     "settings" : {
         "index" : {
-            "number_of_shards" : 6, 
+            "number_of_shards" : 10, 
             "number_of_replicas" : 1 
         }
     },
