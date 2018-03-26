@@ -40,13 +40,13 @@ curl -XPUT 'elastic-search-lb:9200/_ingest/pipeline/pnc-pipeline?pretty' -H 'Con
   "processors": [
       {
         "script" : {
-          "inline" : "ctx.otherIds.pncNumberLongYear = ctx.otherIds.pncNumber.substring(0, ctx.otherIds.pncNumber.lastIndexOf('/')  + 1) + Integer.parseInt(ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf('/') + 1, ctx.otherIds.pncNumber.length() - 1)) + ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.length() -1)",
+          "inline" : "ctx.otherIds.pncNumberLongYear = ctx.otherIds.pncNumber.substring(0, ctx.otherIds.pncNumber.lastIndexOf(\"/\")  + 1) + Integer.parseInt(ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf(\"/\") + 1, ctx.otherIds.pncNumber.length() - 1)) + ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.length() -1)",
           "ignore_failure": true
         }
       }, 
       {
         "script" : {
-          "inline" : "ctx.otherIds.pncNumberShortYear = (ctx.otherIds.pncNumber.substring(0, ctx.otherIds.pncNumber.lastIndexOf('/')  + 1) + Integer.parseInt(ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf('/') + 1, ctx.otherIds.pncNumber.length() - 1)) + ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.length() -1)).substring(2)",
+          "inline" : "ctx.otherIds.pncNumberShortYear = (ctx.otherIds.pncNumber.substring(0, ctx.otherIds.pncNumber.lastIndexOf(\"/\")  + 1) + Integer.parseInt(ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.lastIndexOf(\"/\") + 1, ctx.otherIds.pncNumber.length() - 1)) + ctx.otherIds.pncNumber.substring(ctx.otherIds.pncNumber.length() -1)).substring(2)",
           "ignore_failure": true
         }   
       },
