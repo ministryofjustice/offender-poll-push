@@ -72,8 +72,8 @@ curl -XPUT 'elastic-search-lb:9200/offender?pretty' -H 'Content-Type: applicatio
         "document": {
         "properties": {
             "otherIds.croNumberLowercase": {"type": "keyword"},
-		    "otherIds.pncNumberLongYear": {"type": "keyword"},
-		    "otherIds.pncNumberShortYear": {"type": "keyword"},
+            "otherIds.pncNumberLongYear": {"type": "keyword"},
+            "otherIds.pncNumberShortYear": {"type": "keyword"},
             "dateOfBirth": {
               "type":   "date",
               "format": "yyyy-MM-dd||yyyy/MM/dd||dd-MM-yy||dd/MM/yy||dd-MM-yyyy||dd/MM/yyyy"
