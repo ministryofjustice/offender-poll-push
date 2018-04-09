@@ -35,7 +35,7 @@ class Builder @Inject() (source: SingleSource)(implicit injector: Injector) exte
 
         case Some(error) =>
 
-          log.warning(s"BUILD ERROR: ${error.getMessage}")
+          log.warning(s"BUILD ERROR for Offender ID: ${offender.id} - ${error.getMessage}")
           paging ! PushResult(offender, None, "", None)     // Inform Poller that future Push attempt has been account for
 
         case None =>
