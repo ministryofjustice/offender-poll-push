@@ -11,8 +11,10 @@ import com.google.inject.name.Named
 import gov.uk.justice.digital.offenderpollpush.data._
 import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource}
 import grizzled.slf4j.Logging
+import org.ehcache.config.builders.{CacheConfigurationBuilder, CacheManagerBuilder}
 import org.json4s.Formats
 import org.json4s.native.Serialization._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -22,6 +24,10 @@ class DeliusSource @Inject() (@Named("apiBaseUrl") apiBaseUrl: String, @Named("a
                               implicit val materializer: ActorMaterializer) extends BulkSource with SingleSource with Logging {
 
   private val http = Http()
+
+
+//  CacheManagerBuilder.newCacheManagerBuilder().withCache("preConfigured", CacheConfigurationBuilder.newCacheConfigurationBuilder() )
+// expiry needed, cache, time out, get and set if not present, all Future based, possibly by Future {} blocks. login
 
   private def stringUnmarshaller(ranges: ContentTypeRange*) =
 

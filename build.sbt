@@ -9,6 +9,7 @@ scalaVersion := "2.12.4"
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
 libraryDependencies ++= Seq(
+  "org.ehcache" % "ehcache" % "3.5.2",
   "org.json4s" %% "json4s-native" % "3.5.3",
   "org.clapper" %% "grizzled-slf4j" % "1.3.2",
   "net.codingwell" %% "scala-guice" % "4.1.1",
