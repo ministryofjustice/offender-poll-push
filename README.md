@@ -98,4 +98,3 @@ Note: the number of shards should ideally be double the number of nodes in the c
 The poller can run in two different modes:
 - Delta mode (the default): The Delius Offender Delta table is polled every 5 seconds for a list of changed Offender IDs. This list is filtered for unique IDs, and a full-fat (Offender, Aliases, Addresses) JSON representation of the Offender is built and Upserted into ElasticSearch for immediate searching.
 - Index All Offenders (set the environment variable `INDEX_ALL_OFFENDERS=true` to enable): The entire Offender ID list of the whole database is Indexed and inserted into Elastic Search. This is a one-off operation required to make the initial load of data into the Elastic Search cluster after which a separate Delta operation poll puller will keep Elastic Search in sync.
- 
