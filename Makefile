@@ -23,12 +23,12 @@ sbt-clean:
 sbt-test: build_dir = $(shell pwd)
 sbt-test:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
-	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v test;"
+	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -mem 3072 -v test;"
 
 sbt-build: build_dir = $(shell pwd)
 sbt-build:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
-	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v 'set target in assembly := file(\"docker/artefacts/\")' assembly; chmod -R 0777 project/ target/"
+	docker run --rm -v $(build_dir):/build -w /build -e TERM='dumb' $(sbt_builder_image) bash -c " sbt -v -mem 3072 'set target in assembly := file(\"docker/artefacts/\")' assembly; chmod -R 0777 project/ target/"
 
 ecr-login:
 	$(shell aws ecr get-login --no-include-email --region ${aws_region})
