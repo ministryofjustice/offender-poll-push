@@ -28,7 +28,7 @@ sbt-test:
 sbt-assembly: build_dir = $(shell pwd)
 sbt-assembly:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
-	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sudo mkdir artefacts/; sudo chmod 0777 artefacts; ls -ail ; sbt -v -mem 3072 'set test in assembly := {}' 'set target in assembly := file(\"/home/circleci/build/artefacts/\")' assembly; sudo chmod -R 0777 project/"
+	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sudo mkdir artefacts/; sudo chmod 0777 artefacts; sbt -v -mem 3072 'set test in assembly := {}' 'set target in assembly := file(\"/home/circleci/build/artefacts/\")' assembly; sudo chmod -R 0777 project/"
 
 ecr-login:
 	$(shell aws ecr get-login --no-include-email --region ${aws_region})
