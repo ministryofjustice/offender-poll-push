@@ -1,0 +1,26 @@
+FROM mojdigitalstudio/hmpps-base-java:latest
+# Build time variables
+ARG OFFENDERPOLLPUSH_VERSION
+ENV OFFENDERPOLLPUSH_VERSION=$OFFENDERPOLLPUSH_VERSION
+
+USER root
+
+RUN apk add curl jq
+
+RUN addgroup -g 2000 -S appgroup && \
+    adduser -u 2000 -S -G appgroup appuser && \
+    mkdir -p /app
+WORKDIR /app
+
+COPY offenderPollPush-${OFFENDERPOLLPUSH_VERSION}.jar /app/offenderPollPush.jar
+
+COPY docker/scripts/* /app/
+COPY docker/templates/* /app/templates/
+
+RUN chown -R appuser:appgroup /app
+
+USER 2000
+
+EXPOSE 9000
+
+ENTRYPOINT ["/app/entrypoint.sh"]

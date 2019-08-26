@@ -10,8 +10,8 @@
 
 CURL=$(which curl)
 JQ=$(which jq)
-ES_CLUSTER_NAME="odfe-cluster"
-ES_CLUSTER="http://localhost:9200"
+ES_CLUSTER=$1
+ES_CLUSTER_NAME=$2
 OFFENDER_INDEX="offender"
 OFFENDER_PIPELINE="pnc-pipeline"
 
@@ -39,7 +39,7 @@ fi
 LIST_PIPELINE=$($CURL -s $ES_CLUSTER/_ingest/pipeline/$OFFENDER_PIPELINE)
 if [ $(echo $LIST_PIPELINE | $JQ -r '.|length') -eq 0 ]; then
     echo "Pipeline $OFFENDER_PIPELINE not found - creating..."
-    CREATE_PIPELINE=$($CURL -s -X PUT -H 'Content-Type: application/json' -d @../templates/offender-pipeline.json $ES_CLUSTER/_ingest/pipeline/$OFFENDER_PIPELINE?pretty)
+    CREATE_PIPELINE=$($CURL -s -X PUT -H 'Content-Type: application/json' -d @templates/offender-pipeline.json $ES_CLUSTER/_ingest/pipeline/$OFFENDER_PIPELINE?pretty)
     if [ "$(echo $CREATE_PIPELINE | $JQ -r .acknowledged)" != "true" ]; then
         echo "Error creating pnc-pipeline. Error - $CREATE_PIPELINE. Exiting"
         exit 1
@@ -57,8 +57,8 @@ if [ -z $(echo $INDEX_LIST | $JQ -r --arg IDX "$OFFENDER_INDEX" '.[] | select(.i
     # Create the index with mappings
     # Update the default shard value based on the number of data nodes - required value is 2x Data Node Count
     SHARD_COUNT=$(( $(echo $CLUSTER_HEALTH | $JQ -r .number_of_data_nodes) * 2 ))
-    REPLICA_COUNT=$(cat ../templates/offender-index.json | $JQ -r .settings.index.number_of_replicas)
-    cat ../templates/offender-index.json | $JQ --argjson SHARD_COUNT $SHARD_COUNT '.settings.index.number_of_shards = $SHARD_COUNT' > ./offender-index.json
+    REPLICA_COUNT=$(cat templates/offender-index.json | $JQ -r .settings.index.number_of_replicas)
+    cat templates/offender-index.json | $JQ --argjson SHARD_COUNT $SHARD_COUNT '.settings.index.number_of_shards = $SHARD_COUNT' > ./offender-index.json
     CREATE_INDEX=$($CURL -s -X PUT -H "Content-Type: application/json" -d @./offender-index.json $ES_CLUSTER/$OFFENDER_INDEX)
     if [ -z $CREATE_INDEX ]; then
         echo "Index creation failed"
