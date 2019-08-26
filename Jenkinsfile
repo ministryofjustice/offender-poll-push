@@ -12,7 +12,7 @@ pipeline {
     agent { label "jenkins_slave" }
 
     environment {
-        docker_image = "hmpps/new-tech-web"
+        docker_image = "hmpps/new-tech-offender-pollpush"
         aws_region = 'eu-west-2'
         ecr_repo = ''
         offenderpollpush_VERSION = get_offenderpollpush_version()
