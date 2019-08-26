@@ -12,7 +12,7 @@ RUN addgroup -g 2000 -S appgroup && \
     mkdir -p /app
 WORKDIR /app
 
-COPY offenderPollPush-${OFFENDERPOLLPUSH_VERSION}.jar /app/offenderPollPush.jar
+COPY artefacts/offenderPollPush-${OFFENDERPOLLPUSH_VERSION}.jar /app/offenderPollPush.jar
 
 COPY docker/scripts/* /app/
 COPY docker/templates/* /app/templates/
