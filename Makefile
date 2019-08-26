@@ -1,4 +1,4 @@
-.PHONY: all ecr-login sbt-clean sbt-test sbt-build build tag test push clean-remote clean-local
+.PHONY: all ecr-login sbt-clean sbt-test sbt-assembly build tag test push clean-remote clean-local
 
 aws_region := eu-west-2
 image := hmpps/new-tech-offender-pollpush
@@ -8,7 +8,7 @@ all:
 	$(MAKE) ecr-login
 	$(MAKE) sbt-clean
 	$(MAKE) sbt-test
-	$(MAKE) sbt-build
+	$(MAKE) sbt-assembly
 	$(MAKE) build
 	$(MAKE) test
 	$(MAKE) push
@@ -25,8 +25,8 @@ sbt-test:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
 	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sbt -mem 3072 -v test;"
 
-sbt-build: build_dir = $(shell pwd)
-sbt-build:
+sbt-assembly: build_dir = $(shell pwd)
+sbt-assembly:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
 	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sbt -v -mem 3072 'set test in assembly := {}' assembly; sudo chmod -R 0777 project/"
 
