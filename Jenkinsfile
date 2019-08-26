@@ -49,11 +49,20 @@ pipeline {
             }
         }
         
+        stage('SBT Test') {
+            steps {
+                sh '''
+                    #!/bin/bash +x
+                    make sbt-test;
+                '''
+            }
+        }
+
         stage('SBT Assembly') {
             steps {
                 sh '''
                     #!/bin/bash +x
-                    make sbt-build offenderpollpush_version=${BUILD_NUMBER};
+                    make sbt-assembly;
                 '''
             }
         }
