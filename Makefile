@@ -1,4 +1,4 @@
-.PHONY: all ecr-login sbt-clean sbt-build build tag test push clean-remote clean-local
+.PHONY: all ecr-login sbt-clean sbt-test sbt-build build tag test push clean-remote clean-local
 
 aws_region := eu-west-2
 image := hmpps/new-tech-offender-pollpush
@@ -7,6 +7,7 @@ sbt_builder_image := circleci/openjdk:8-jdk
 all:
 	$(MAKE) ecr-login
 	$(MAKE) sbt-clean
+	$(MAKE) sbt-test
 	$(MAKE) sbt-build
 	$(MAKE) build
 	$(MAKE) test
@@ -17,12 +18,17 @@ all:
 sbt-clean: build_dir = $(shell pwd)
 sbt-clean:
 	$(Info Running sbt clean task)
-	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v clean ;"
+	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v clean;"
+
+sbt-test: build_dir = $(shell pwd)
+sbt-test:
+	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
+	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v test;"
 
 sbt-build: build_dir = $(shell pwd)
 sbt-build:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
-	docker run -it --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v 'set target in assembly := file(\"./\")' assembly; chmod -R 0777 project/ target/"
+	docker run --rm -v $(build_dir):/build -w /build $(sbt_builder_image) bash -c "sbt -v 'set target in assembly := file(\"./\")' assembly; chmod -R 0777 project/ target/"
 
 ecr-login:
 	$(shell aws ecr get-login --no-include-email --region ${aws_region})
