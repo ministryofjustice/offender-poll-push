@@ -53,7 +53,7 @@ pipeline {
             steps {
                 sh '''
                     #!/bin/bash +x
-                    make sbt-assembly offenderpollpush_version=${BUILD_NUMBER};
+                    make sbt-build offenderpollpush_version=${BUILD_NUMBER};
                 '''
             }
         }
