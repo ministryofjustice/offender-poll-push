@@ -1,4 +1,4 @@
 target/
 .idea/
 ecr.repo
-docker/artefacts/*.jar
+offenderPollPush-*.jar

@@ -28,7 +28,7 @@ sbt-test:
 sbt-assembly: build_dir = $(shell pwd)
 sbt-assembly:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
-	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sbt -v -mem 3072 'set test in assembly := {}' assembly; sudo chmod -R 0777 project/"
+	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sbt -v -mem 3072 'set test in assembly := {}' 'set target in assembly := file(\"/home/circleci/build/\")' assembly; sudo chmod -R 0777 project/"
 
 ecr-login:
 	$(shell aws ecr get-login --no-include-email --region ${aws_region})
@@ -62,5 +62,4 @@ clean-local:
 	-docker rmi ${ecr_repo}:latest
 	-docker rmi ${ecr_repo}:${offenderpollpush_version}
 	-rm -f ./ecr.repo
-	-rm -f ./src/test/resources/client*.key 
-	-rm -f ./src/test/resources/client.pub
+	-rm -f ./offenderPollPush-*.jar

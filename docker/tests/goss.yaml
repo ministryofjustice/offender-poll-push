@@ -6,7 +6,7 @@ file:
   /app/offenderPollPush.jar:
     exists: true
     filetype: file
-    mode: "0777"
+    mode: "0644"
     owner: appuser
     group: appgroup
 process:
