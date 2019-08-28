@@ -1,2 +1,5 @@
 target/
 .idea/
+ecr.repo
+offenderPollPush-*.jar
+artefacts/

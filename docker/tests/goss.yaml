@@ -1,0 +1,15 @@
+package:
+  openjdk8-jre:
+    installed: true
+file:
+  # Check for presence of New Tech Web jar file
+  /app/offenderPollPush.jar:
+    exists: true
+    filetype: file
+    mode: "0644"
+    owner: appuser
+    group: appgroup
+process:
+  java:
+    running: true
+
