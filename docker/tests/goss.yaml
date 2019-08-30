@@ -23,25 +23,21 @@ file:
   /app/entrypoint.sh:
     exists: true
     filetype: file
-    mode: "0755"
     owner: appuser
     group: appgroup
   /app/es_init.py:
     exists: true
     filetype: file
-    mode: "0755"
     owner: appuser
     group: appgroup
   /app/templates/offender-index.json:
     exists: true
     filetype: file
-    mode: "0644"
     owner: appuser
     group: appgroup
   /app/templates/offender-pipeline.json:
     exists: true
     filetype: file
-    mode: "0644"
     owner: appuser
     group: appgroup
 process:
