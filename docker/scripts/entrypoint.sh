@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-pwd
-ls -ail
+
 # Determine whether to start in Full or Delta mode if not in a goss test
 if [ -z $GOSS_TEST ]; then
-    ./es_init.sh $ELASTIC_SEARCH_HOST $ELASTIC_SEARCH_CLUSTER
+    # Check ES state to determine which mode to run in
+    ./es_init.py
     MODE=$?
     if [ $MODE -eq 0 ]; then
         # Delta Mode

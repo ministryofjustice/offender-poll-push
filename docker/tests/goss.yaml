@@ -1,9 +1,44 @@
 package:
   openjdk8-jre:
     installed: true
+  python3:
+    installed: true
+command:
+  pip3 list | grep boto3:
+    exit-status: 0
+  pip3 list | grep elasticsearch:
+    exit-status: 0
+  pip3 list | grep requests:
+    exit-status: 0
+  pip3 list | grep requests-aws4auth:
+    exit-status: 0
 file:
   # Check for presence of New Tech Web jar file
   /app/offenderPollPush.jar:
+    exists: true
+    filetype: file
+    mode: "0644"
+    owner: appuser
+    group: appgroup
+  /app/entrypoint.sh:
+    exists: true
+    filetype: file
+    mode: "0755"
+    owner: appuser
+    group: appgroup
+  /app/es_init.py:
+    exists: true
+    filetype: file
+    mode: "0755"
+    owner: appuser
+    group: appgroup
+  /app/templates/offender-index.json:
+    exists: true
+    filetype: file
+    mode: "0644"
+    owner: appuser
+    group: appgroup
+  /app/templates/offender-pipeline.json:
     exists: true
     filetype: file
     mode: "0644"
