@@ -23,7 +23,7 @@ sbt-clean:
 sbt-test: build_dir = $(shell pwd)
 sbt-test:
 	# Build container runs as root - need to fix up perrms at end so jenkins can clear up the workspace
-	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sbt -mem 3072 -v test;"
+	docker run --rm -v $(build_dir):/home/circleci/build -w /home/circleci/build $(sbt_builder_image) bash -c "sbt -mem 3072 -v 'set parallelExecution in Test := false' test;"
 
 sbt-assembly: build_dir = $(shell pwd)
 sbt-assembly:
