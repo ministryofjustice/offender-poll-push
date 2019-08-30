@@ -5,7 +5,9 @@ ENV OFFENDERPOLLPUSH_VERSION=$OFFENDERPOLLPUSH_VERSION
 
 USER root
 
-RUN apk add curl jq
+RUN apk add curl jq && \
+    pip3 install --upgrade pip && \
+    pip3 install boto3 elasticsearch requests requests-aws4auth
 
 RUN addgroup -g 2000 -S appgroup && \
     adduser -u 2000 -S -G appgroup appuser && \
@@ -14,8 +16,7 @@ WORKDIR /app
 
 COPY artefacts/offenderPollPush-${OFFENDERPOLLPUSH_VERSION}.jar /app/offenderPollPush.jar
 
-COPY docker/scripts/* /app/
-COPY docker/templates/* /app/templates/
+COPY docker/scripts/ /app/
 
 RUN chown -R appuser:appgroup /app
 

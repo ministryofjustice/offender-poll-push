@@ -33,6 +33,9 @@ class Configuration extends ScalaModule {
     "ELASTIC_SEARCH_SCHEME" -> "http",
     "ELASTIC_SEARCH_HOST" -> "localhost",
     "ELASTIC_SEARCH_PORT" -> "9200",
+    "ELASTIC_SEARCH_AWS_REGION" -> "eu-west-2",
+    "ELASTIC_SEARCH_AWS_SERVICENAME" -> "es",
+    "ELASTIC_SEARCH_AWS_SIGNREQUESTS" -> "false",
     "ALL_PULL_PAGE_SIZE" -> "1000",
     "PROCESS_PAGE_SIZE" -> "10",
     "POLL_SECONDS" -> "5"
@@ -46,6 +49,8 @@ class Configuration extends ScalaModule {
         "apiUsername" -> "DELIUS_API_USERNAME",
         "searchHost" -> "ELASTIC_SEARCH_HOST",
         "searchScheme" -> "ELASTIC_SEARCH_SCHEME",
+        "searchAWSRegion" -> "ELASTIC_SEARCH_AWS_REGION",
+        "searchAWSServiceName" -> "ELASTIC_SEARCH_AWS_SERVICENAME",
         "ingestionPipeline" -> "INGESTION_PIPELINE"
       ),
       identity
@@ -64,7 +69,8 @@ class Configuration extends ScalaModule {
     bindConfiguration(
       Map(
         "debugLog" -> "DEBUG_LOG",
-        "allOffenders" -> "INDEX_ALL_OFFENDERS"
+        "allOffenders" -> "INDEX_ALL_OFFENDERS",
+        "signSearchRequests" -> "ELASTIC_SEARCH_AWS_SIGNREQUESTS"
       ),
       s => s.toBoolean
     )
