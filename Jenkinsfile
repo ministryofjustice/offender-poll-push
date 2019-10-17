@@ -1,7 +1,6 @@
 def get_offenderpollpush_version() {
     sh """
-    # App version is set in sbt build config 
-    build_version=$(grep "version :=" build.sbt | awk '{print \$3}' | sed 's/\\"//g')
+    build_version=\$(grep "version :=" build.sbt | awk '{print \$3}' | sed 's/\\"//g')
     branch=\$(echo ${GIT_BRANCH} | sed 's/\\//_/g')
     if [ \\"\$branch\\" = \\"master\\" ]; then
         echo "Master Branch build detected"
