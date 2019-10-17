@@ -7,7 +7,7 @@ def get_offenderpollpush_version() {
         echo "\$build_version" > ./offenderpollpush.version      
     else
         echo "Non Master Branch build detected"
-        echo "\$build_version-\$branch" > offenderapi.version;
+        echo "\$build_version-\$branch" > offenderpollpush.version;
     fi
     """
     return readFile("./offenderpollpush.version")
