@@ -3,7 +3,7 @@ import akka.http.scaladsl.model.{DateTime, StatusCodes}
 import configuration.MockedConfiguration
 import gov.uk.justice.digital.offenderpollpush.Server
 import gov.uk.justice.digital.offenderpollpush.data._
-import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource, SingleTarget}
+import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource, SingleTarget, SingleTargetPublisher}
 import helpers.ExtensionMethods._
 import org.scalatest.{BeforeAndAfter, FunSpec, GivenWhenThen, Matchers}
 import org.scalatest.concurrent.Eventually
@@ -12,6 +12,7 @@ import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers._
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Seconds, Span}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
@@ -64,6 +65,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, never()).pull(any[String], any[DateTime])
         verify(mockSingleTarget, never()).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, never()).publish(any[TargetOffender])
         verify(mockBulkSource, never()).deleteCohort(any[DateTime])
       }
     }
@@ -82,6 +84,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(2)).pullDeltas
         verify(mockSingleSource, never()).pull(any[String], any[DateTime])
         verify(mockSingleTarget, never()).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, never()).publish(any[TargetOffender])
         verify(mockBulkSource, never()).deleteCohort(any[DateTime])
       }
     }
@@ -106,6 +109,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(1)).pull(offenderDelta.offenderId, dateTimeNow)
         verify(mockSingleTarget, times(1)).push(offenderDelta.targetOffender())
+        verify(mockSingleTargetPublisher, times(1)).publish(offenderDelta.targetOffender())
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -133,9 +137,11 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockSingleSource, times(1)).pull(offenderDelta1.offenderId, dateTimeNow)
         verify(mockSingleSource, times(1)).pull(offenderDelta2.offenderId, dateTimeNow)
         verify(mockSingleTarget, times(2)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(2)).publish(any[TargetOffender])
         verify(mockSingleTarget, times(1)).push(offenderDelta1.targetOffender())
         verify(mockSingleTarget, times(1)).push(offenderDelta2.targetOffender())
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
+
       }
     }
 
@@ -159,6 +165,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(4)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(4)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(4)).publish(any[TargetOffender])
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -183,6 +190,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(1)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(2)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(1)).publish(any[TargetOffender])
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -229,6 +237,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(3)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(2)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(2)).publish(any[TargetOffender])
         verify(mockBulkSource, never()).deleteCohort(any[DateTime])
       }
 
@@ -261,6 +270,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(2)).pullDeltas
         verify(mockSingleSource, times(4)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(4)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(4)).publish(any[TargetOffender])
         verify(mockBulkSource, times(2)).deleteCohort(any[DateTime])
       }
     }
@@ -287,6 +297,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(3)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(3)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(3)).publish(any[TargetOffender])
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -305,6 +316,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(2)).pullDeltas
         verify(mockSingleSource, never()).pull(any[String], any[DateTime])
         verify(mockSingleTarget, never()).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, never()).publish(any[TargetOffender])
         verify(mockBulkSource, never()).deleteCohort(any[DateTime])
       }
     }
@@ -327,6 +339,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
         verify(mockBulkSource, times(1)).pullDeltas
         verify(mockSingleSource, times(1)).pull("123", dateTimeNow)
         verify(mockSingleTarget, times(0)).push(any[TargetOffender])
+        verify(mockSingleTargetPublisher, times(0)).publish(any[TargetOffender])
         verify(mockBulkSource, times(1)).deleteCohort(dateTimeNow)
       }
     }
@@ -344,6 +357,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
   private var mockBulkSource: BulkSource = _
   private var mockSingleSource: SingleSource = _
   private var mockSingleTarget: SingleTarget = _
+  private var mockSingleTargetPublisher: SingleTargetPublisher = _
 
   private var runningService: ActorSystem = _
 
@@ -351,6 +365,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
     mockBulkSource = mock[BulkSource]
     mockSingleSource = mock[SingleSource]
     mockSingleTarget = mock[SingleTarget]
+    mockSingleTargetPublisher = mock[SingleTargetPublisher]
   }
 
   after {
@@ -360,7 +375,7 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
 
   private def runServerWithMockedServices(allPullPageSize: Option[Int] = None) {
 
-    runningService = Server.run(MockedConfiguration(mockBulkSource, mockSingleSource, mockSingleTarget, allPullPageSize))
+    runningService = Server.run(MockedConfiguration(mockBulkSource, mockSingleSource, mockSingleTarget, mockSingleTargetPublisher, allPullPageSize))
   }
 
   private def mockBulkSourcePullDeltasOk(deltas: Seq[SourceOffenderDelta]) = when(mockBulkSource.pullDeltas).thenReturn(

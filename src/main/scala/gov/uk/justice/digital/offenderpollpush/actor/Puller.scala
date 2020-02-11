@@ -33,7 +33,9 @@ class Puller @Inject() (source: BulkSource,
 
         case AllIdsResult(_, _, None) =>
 
-          for (request <- offenders.map(ProcessRequest(_, DateTime.now, deletion = false))) paging ! request
+          for (request <- offenders.map(ProcessRequest(_, DateTime.now, deletion = false))) {
+            paging ! request
+          }
 
           self ! AllIdsRequest(page + 1)
       }
