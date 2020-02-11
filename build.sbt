@@ -13,8 +13,8 @@ libraryDependencies ++= Seq(
   "org.clapper" %% "grizzled-slf4j" % "1.3.2",
   "net.codingwell" %% "scala-guice" % "4.1.1",
 
-  "com.typesafe.akka" %% "akka-http" % "10.0.11",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.4.12",
+  "com.typesafe.akka" %% "akka-http" % "10.1.10",
+  "com.typesafe.akka" %% "akka-slf4j" % "2.5.23",
 
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.9.1",
@@ -22,7 +22,6 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk" % "1.11.46",
 
   "com.lightbend.akka" %% "akka-stream-alpakka-sns" % "1.1.2",
-  "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % "1.1.2",
 
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   "org.mockito" % "mockito-core" % "2.13.0" % "test",
