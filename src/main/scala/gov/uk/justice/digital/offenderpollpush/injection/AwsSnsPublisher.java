@@ -51,9 +51,9 @@ public class AwsSnsPublisher {
         this.httpClient = AkkaHttpClient.builder().withActorSystem(system).build();
     }
 
-    public void run(final String offenderJson) {
+    public void run(final String id) {
 
-        log.info("PUBLISH TO SNS {}", offenderJson);
+        log.info("PUBLISH TO SNS {}", id);
 
         final SnsAsyncClient snsAsyncClient =
             SnsAsyncClient.builder()
@@ -64,7 +64,7 @@ public class AwsSnsPublisher {
                 .region(Region.of(region))
                 .build();
 
-        publishToSourceTopicWithFlow(snsAsyncClient, offenderJson).thenAccept(done -> snsAsyncClient.close());
+        publishToSourceTopicWithFlow(snsAsyncClient, id).thenAccept(done -> snsAsyncClient.close());
 
         system.registerOnTermination(snsAsyncClient::close);
     }

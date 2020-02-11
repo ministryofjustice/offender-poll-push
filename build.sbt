@@ -8,6 +8,11 @@ scalaVersion := "2.12.4"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
+
 libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-native" % "3.5.3",
   "org.clapper" %% "grizzled-slf4j" % "1.3.2",
