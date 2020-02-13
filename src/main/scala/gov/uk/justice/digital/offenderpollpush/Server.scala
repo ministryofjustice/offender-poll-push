@@ -13,7 +13,10 @@ object Server extends App with Logging {
 
   def run(config: Configuration = new Configuration) = {
 
-    for ((key, value) <- config.allSettings) logger.info(s"Configuration setting - $key: $value")
+    for ((key, value) <- config.allSettings) {
+      val a = if (key.contains("ACCESS_KEY")) "*****" else value
+      logger.info(s"Configuration setting - $key: $a")
+    }
 
     implicit val injector: Injector = Guice.createInjector(config)
     val system = injector.instance[ActorSystem]

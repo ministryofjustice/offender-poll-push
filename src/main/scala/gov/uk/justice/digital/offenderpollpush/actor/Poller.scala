@@ -63,7 +63,9 @@ class Poller @Inject() (source: BulkSource,
 
             def processRequests(uniqueIds: Seq[String], deletion: Boolean = false) {
 
-              for (request <- uniqueIds.map(ProcessRequest(_, cohort, deletion))) paging ! request
+              for (request <- uniqueIds.map(ProcessRequest(_, cohort, deletion))) {
+                paging ! request
+              }
             }
 
             val actionUniqueIds = deltas.groupBy(_.action).mapValues(_.map(_.offenderId).distinct)

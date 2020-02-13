@@ -1,6 +1,7 @@
 package gov.uk.justice.digital.offenderpollpush.actor
 
 import akka.pattern.pipe
+import com.google.inject.name.Named
 import com.google.inject.{Inject, Injector}
 import gov.uk.justice.digital.offenderpollpush.data.{BuildResult, ProcessRequest, PushResult, TargetOffender}
 import gov.uk.justice.digital.offenderpollpush.helpers.ExtensionMethods._
@@ -8,10 +9,11 @@ import gov.uk.justice.digital.offenderpollpush.traits.{LoggingActor, SingleSourc
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Builder @Inject() (source: SingleSource)(implicit injector: Injector) extends LoggingActor {
+class Builder @Inject() (source: SingleSource, @Named("allOffenders") allOffenders: Boolean)(implicit injector: Injector) extends LoggingActor {
 
   private def paging = context.parent
   private val pusher = context.startActor[Pusher]
+  private val snsPusher = context.startActor[AwsSnsPusher]
 
   override def receive: Receive = {
 
@@ -42,6 +44,9 @@ class Builder @Inject() (source: SingleSource)(implicit injector: Injector) exte
 
           log.info(s"Pulled Offender ID: ${offender.id} of Delta Cohort: ${offender.cohort} with ${offender.json.length} JSON chars")
           pusher ! offender
+          if (!allOffenders) {
+            snsPusher ! offender
+          }
       }
   }
 }

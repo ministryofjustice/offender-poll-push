@@ -1,9 +1,11 @@
 package configuration
 
 import gov.uk.justice.digital.offenderpollpush.Configuration
-import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource, SingleTarget}
+import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource, SingleTarget, SingleTargetPublisher}
 
-case class MockedConfiguration(bulkSource: BulkSource, singleSource: SingleSource, singleTarget: SingleTarget, allPullPageSize: Option[Int] = None) extends Configuration {
+case class MockedConfiguration(bulkSource: BulkSource, singleSource: SingleSource,
+                               singleTarget: SingleTarget, singleTargetPublisher: SingleTargetPublisher,
+                               allPullPageSize: Option[Int] = None) extends Configuration {
 
   override protected def envDefaults: Map[String, String] = {
 
@@ -17,5 +19,6 @@ case class MockedConfiguration(bulkSource: BulkSource, singleSource: SingleSourc
     bind[BulkSource].toInstance(bulkSource)
     bind[SingleSource].toInstance(singleSource)
     bind[SingleTarget].toInstance(singleTarget)
+    bind[SingleTargetPublisher].toInstance(singleTargetPublisher)
   }
 }

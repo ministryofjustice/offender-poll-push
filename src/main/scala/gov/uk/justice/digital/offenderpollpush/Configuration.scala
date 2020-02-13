@@ -2,13 +2,13 @@ package gov.uk.justice.digital.offenderpollpush
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.google.inject.AbstractModule
 import gov.uk.justice.digital.offenderpollpush.injection._
-import gov.uk.justice.digital.offenderpollpush.services.{DeliusSource, ElasticsearchTarget}
-import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource, SingleTarget}
+import gov.uk.justice.digital.offenderpollpush.services.{AwsSnsTarget, DeliusSource, ElasticsearchTarget}
+import gov.uk.justice.digital.offenderpollpush.traits.{BulkSource, SingleSource, SingleTarget, SingleTargetPublisher}
 import net.codingwell.scalaguice.ScalaModule
 import org.elasticsearch.client.{RestClientBuilder, RestHighLevelClient}
 import org.json4s.Formats
+
 import scala.util.Properties
 
 class Configuration extends ScalaModule {
@@ -36,6 +36,16 @@ class Configuration extends ScalaModule {
     "ELASTIC_SEARCH_AWS_REGION" -> "eu-west-2",
     "ELASTIC_SEARCH_AWS_SERVICENAME" -> "es",
     "ELASTIC_SEARCH_AWS_SIGNREQUESTS" -> "false",
+    "SNS_REGION" -> "eu-west-2",
+    "SNS_SERVICE_NAME" -> "sns",
+    "SNS_ARN_TOPIC" -> "arn:aws:sns:us-east-1:000000000000:offender_topic",
+    "SNS_PORT" -> "4575",
+    "SNS_ENDPOINT" -> "http://localhost:4575",
+    "SNS_ACCESS_KEY_ID" -> "foo",
+    "SNS_SECRET_ACCESS_KEY" -> "foo",
+    "SNS_MSG_EVENT_TYPE" -> "offender-change",
+    "SNS_MSG_SOURCE" -> "delius",
+    "SNS_MSG_SUBJECT" -> "offender changes message",
     "ALL_PULL_PAGE_SIZE" -> "1000",
     "PROCESS_PAGE_SIZE" -> "10",
     "POLL_SECONDS" -> "5"
@@ -51,8 +61,15 @@ class Configuration extends ScalaModule {
         "searchScheme" -> "ELASTIC_SEARCH_SCHEME",
         "searchAWSRegion" -> "ELASTIC_SEARCH_AWS_REGION",
         "searchAWSServiceName" -> "ELASTIC_SEARCH_AWS_SERVICENAME",
-        "ingestionPipeline" -> "INGESTION_PIPELINE"
-      ),
+        "ingestionPipeline" -> "INGESTION_PIPELINE",
+        "snsEndpoint" -> "SNS_ENDPOINT",
+        "snsRegion" -> "SNS_REGION",
+        "snsArnTopic" -> "SNS_ARN_TOPIC",
+        "awsAccessKeyId" -> "SNS_ACCESS_KEY_ID",
+        "awsSecretAccessKey" -> "SNS_SECRET_ACCESS_KEY",
+        "snsMsgEventType" -> "SNS_MSG_EVENT_TYPE",
+        "snsMsgSource" -> "SNS_MSG_SOURCE",
+        "snsMsgSubject" -> "SNS_MSG_SUBJECT"),
       identity
     )
 
@@ -90,5 +107,6 @@ class Configuration extends ScalaModule {
     bind[BulkSource].to[DeliusSource]
     bind[SingleSource].to[DeliusSource]
     bind[SingleTarget].to[ElasticsearchTarget]
+    bind[SingleTargetPublisher].to[AwsSnsTarget]
   }
 }
