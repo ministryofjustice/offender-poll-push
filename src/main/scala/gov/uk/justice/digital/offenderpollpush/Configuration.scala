@@ -41,8 +41,11 @@ class Configuration extends ScalaModule {
     "SNS_ARN_TOPIC" -> "arn:aws:sns:us-east-1:000000000000:offender_topic",
     "SNS_PORT" -> "4575",
     "SNS_ENDPOINT" -> "http://localhost:4575",
-    "SNS_ACCESS_KEY_ID" -> "access_key",
-    "SNS_SECRET_ACCESS_KEY" -> "secret_access",
+    "SNS_ACCESS_KEY_ID" -> "foo",
+    "SNS_SECRET_ACCESS_KEY" -> "foo",
+    "SNS_MSG_EVENT_TYPE" -> "offender-change",
+    "SNS_MSG_SOURCE" -> "delius",
+    "SNS_MSG_SUBJECT" -> "offender changes message",
     "ALL_PULL_PAGE_SIZE" -> "1000",
     "PROCESS_PAGE_SIZE" -> "10",
     "POLL_SECONDS" -> "5"
@@ -64,7 +67,9 @@ class Configuration extends ScalaModule {
         "snsArnTopic" -> "SNS_ARN_TOPIC",
         "awsAccessKeyId" -> "SNS_ACCESS_KEY_ID",
         "awsSecretAccessKey" -> "SNS_SECRET_ACCESS_KEY",
-      ),
+        "snsMsgEventType" -> "SNS_MSG_EVENT_TYPE",
+        "snsMsgSource" -> "SNS_MSG_SOURCE",
+        "snsMsgSubject" -> "SNS_MSG_SUBJECT"),
       identity
     )
 

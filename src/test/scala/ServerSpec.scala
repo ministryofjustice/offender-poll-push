@@ -42,9 +42,9 @@ class ServerSpec extends FunSpec with MockitoSugar with BeforeAndAfter with Give
       runServerWithMockedServices(Some(2))
 
       Then("four pages of IDs are pulled containing 5 offenders which are build and pushed to target, and no deletions occur")
-      eventually(fiveSecondTimeout) {
+      eventually(tenSecondTimeout) {
 
-        verify(mockBulkSource, times(4)).pullAllIds(any[Int], any[Int])
+        verify(mockBulkSource, atLeast(4)).pullAllIds(any[Int], any[Int])
         verify(mockSingleSource, times(5)).pull(any[String], any[DateTime])
         verify(mockSingleTarget, times(5)).push(any[TargetOffender])
         verify(mockBulkSource, never()).deleteCohort(any[DateTime])
