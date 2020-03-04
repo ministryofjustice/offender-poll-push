@@ -2,7 +2,7 @@ name := "offenderpollpush"
 
 organization := "gov.uk.justice.digital"
 
-version := "0.1.06"
+version := "0.1.07"
 
 scalaVersion := "2.12.4"
 
@@ -30,12 +30,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   "org.mockito" % "mockito-core" % "2.13.0" % "test",
   "com.github.tomakehurst" % "wiremock" % "2.13.0" % "test",
-)
-
-excludeDependencies ++= Seq(
-  ExclusionRule("joda-time", "joda-time"),
-  ExclusionRule("org.xmlunit", "xmlunit-core"),
-  ExclusionRule("org.xmlunit", "xmlunit-legacy")
 )
 
 assemblyJarName in assembly := "offenderPollPush-" + version.value + ".jar"
