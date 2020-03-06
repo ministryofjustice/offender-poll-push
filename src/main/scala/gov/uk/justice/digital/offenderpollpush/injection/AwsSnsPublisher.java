@@ -7,6 +7,7 @@ import akka.stream.Materializer;
 import akka.stream.alpakka.sns.javadsl.SnsPublisher;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
+import com.amazonaws.util.StringUtils;
 import com.github.matsluni.akkahttpspi.AkkaHttpClient;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -24,6 +25,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsAsyncClient;
+import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder;
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 
@@ -58,14 +60,16 @@ public class AwsSnsPublisher {
         messageAttributes.put(EVENT_TYPE_KEY, MessageAttributeValue.builder().dataType("String").stringValue(msgEventType).build());
         messageAttributes.put(SOURCE_KEY, MessageAttributeValue.builder().dataType("String").stringValue(msgSource).build());
 
-        this.snsAsyncClient =
-            SnsAsyncClient.builder()
+        final SnsAsyncClientBuilder builder = SnsAsyncClient.builder()
                 .credentialsProvider(
                     StaticCredentialsProvider.create(AwsBasicCredentials.create(awsAccessKeyId, awsSecretAccessKey)))
                 .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
-                .endpointOverride(URI.create(snsEndpoint))
-                .region(Region.of(snsRegion))
-                .build();
+                .region(Region.of(snsRegion));
+
+        if (StringUtils.hasValue(snsEndpoint)) {
+            builder.endpointOverride(URI.create(snsEndpoint));
+        }
+        this.snsAsyncClient = builder.build();
 
         system.registerOnTermination(snsAsyncClient::close);
     }
