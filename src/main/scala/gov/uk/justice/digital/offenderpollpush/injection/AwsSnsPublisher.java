@@ -1,33 +1,28 @@
 package gov.uk.justice.digital.offenderpollpush.injection;
 
-import akka.Done;
 import akka.actor.ActorSystem;
-import akka.stream.ActorMaterializer;
-import akka.stream.Materializer;
-import akka.stream.alpakka.sns.javadsl.SnsPublisher;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.http.apache.client.impl.ApacheHttpClientFactory;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.util.StringUtils;
-import com.github.matsluni.akkahttpspi.AkkaHttpClient;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import gov.uk.justice.digital.offenderpollpush.data.OffenderDetail;
 import gov.uk.justice.digital.offenderpollpush.data.TargetOffender;
 import gov.uk.justice.digital.offenderpollpush.helpers.JsonUtil;
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.sns.SnsAsyncClient;
-import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder;
-import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sns.model.PublishRequest;
 
 public class AwsSnsPublisher {
 
@@ -40,8 +35,7 @@ public class AwsSnsPublisher {
 
     private final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>(2);
 
-    private final Materializer materializer;
-    private final SnsAsyncClient snsAsyncClient;
+    private final AmazonSNS snsClient;
 
     public @Inject
     AwsSnsPublisher(@Named("snsEndpoint") final String snsEndpoint,
@@ -52,47 +46,37 @@ public class AwsSnsPublisher {
                     @Named("snsMsgEventType") final String msgEventType,
                     @Named("snsMsgSource") final String msgSource,
                     @Named("snsMsgSubject") final String msgSubject) {
-        final ActorSystem system = ActorSystem.create("AwsSnsPublisher");
-        this.materializer = ActorMaterializer.create(system);
         this.topicArn = snsArnTopic;
         this.msgSubject = msgSubject;
 
-        messageAttributes.put(EVENT_TYPE_KEY, MessageAttributeValue.builder().dataType("String").stringValue(msgEventType).build());
-        messageAttributes.put(SOURCE_KEY, MessageAttributeValue.builder().dataType("String").stringValue(msgSource).build());
+        messageAttributes.put(EVENT_TYPE_KEY, new MessageAttributeValue().withStringValue(msgEventType).withDataType("String"));
+        messageAttributes.put(SOURCE_KEY, new MessageAttributeValue().withStringValue(msgSource).withDataType("String"));
 
-        final SnsAsyncClientBuilder builder = SnsAsyncClient.builder()
-                .credentialsProvider(
-                    StaticCredentialsProvider.create(AwsBasicCredentials.create(awsAccessKeyId, awsSecretAccessKey)))
-                .httpClient(AkkaHttpClient.builder().withActorSystem(system).build())
-                .region(Region.of(snsRegion));
-
-        if (StringUtils.hasValue(snsEndpoint)) {
-            builder.endpointOverride(URI.create(snsEndpoint));
-        }
-        this.snsAsyncClient = builder.build();
-
-        system.registerOnTermination(snsAsyncClient::close);
+        final AWSCredentials credentials = new BasicAWSCredentials(awsAccessKeyId, awsSecretAccessKey);
+        snsClient = AmazonSNSClientBuilder.standard()
+            .withCredentials(new AWSStaticCredentialsProvider(credentials))
+            .withRegion(snsRegion)
+            .build();
     }
 
     public void run(final TargetOffender targetOffender) throws IOException {
 
         final OffenderDetail detail = JsonUtil.readValue(targetOffender.json(), OffenderDetail.class);
         final String publishJson = JsonUtil.toString(detail);
-        log.info("Publication message to SNS {}", publishJson);
-        publishToSourceTopicWithFlow(publishJson).thenAccept(res -> snsAsyncClient.close());
+        publish(publishJson).ifPresent(str -> log.info("Published message content {}, received ID {} ", publishJson, str));
     }
 
-    private CompletionStage<Done> publishToSourceTopicWithFlow(final String offenderEvent) {
-        return Source.single(PublishRequest.builder()
-                                    .message(offenderEvent)
-                                    .subject(msgSubject)
-                                    .messageAttributes(messageAttributes)
-                                    .topicArn(topicArn)
-                                    .build())
-                                    .via(SnsPublisher.createPublishFlow(snsAsyncClient))
-                                    .runWith(Sink.foreach(res -> log.info("HTTP response is {} for {}",
-                                        res.sdkHttpResponse(), res.messageId())), materializer);
+    private Optional<String> publish(final String offenderEvent) {
+        final PublishRequest publishRequest = new PublishRequest(topicArn, offenderEvent, msgSubject);
+        publishRequest.setMessageAttributes(messageAttributes);
+        try {
+            final PublishResult response = snsClient.publish(publishRequest);
+            return (response == null) ? Optional.empty() : Optional.ofNullable(response.getMessageId());
+        }
+        catch (AmazonClientException ex) {
+            log.warn("Exception trying to publish", ex);
+            return Optional.empty();
+        }
     }
-
 
 }
