@@ -42,7 +42,7 @@ class Configuration extends ScalaModule {
     "SNS_ENDPOINT" -> "",
     "SNS_ACCESS_KEY_ID" -> "foo",
     "SNS_SECRET_ACCESS_KEY" -> "foo",
-    "SNS_MSG_EVENT_TYPE" -> "offender-change",
+    "SNS_MSG_EVENT_TYPE" -> "OFFENDER_CHANGED",
     "SNS_MSG_SOURCE" -> "delius",
     "SNS_MSG_SUBJECT" -> "offender changes message",
     "ALL_PULL_PAGE_SIZE" -> "1000",
