@@ -1,17 +1,14 @@
 package gov.uk.justice.digital.offenderpollpush.injection;
 
-import akka.actor.ActorSystem;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.http.apache.client.impl.ApacheHttpClientFactory;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
-import com.amazonaws.util.StringUtils;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import gov.uk.justice.digital.offenderpollpush.data.OffenderDetail;
@@ -70,11 +67,11 @@ public class AwsSnsPublisher {
         final PublishRequest publishRequest = new PublishRequest(topicArn, offenderEvent, msgSubject);
         publishRequest.setMessageAttributes(messageAttributes);
         try {
-            final PublishResult response = snsClient.publish(publishRequest);
-            return (response == null) ? Optional.empty() : Optional.ofNullable(response.getMessageId());
+            final PublishResult publishResult = snsClient.publish(publishRequest);
+            return Optional.ofNullable(publishResult).map(PublishResult::getMessageId);
         }
         catch (AmazonClientException ex) {
-            log.warn("Exception trying to publish", ex);
+            log.error("Exception trying to publish", ex);
             return Optional.empty();
         }
     }
