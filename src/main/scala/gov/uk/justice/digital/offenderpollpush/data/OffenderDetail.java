@@ -1,6 +1,7 @@
 package gov.uk.justice.digital.offenderpollpush.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
@@ -65,6 +66,7 @@ public class OffenderDetail {
     }
 
     @JsonProperty("nomsNumber")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getNomsNumber() {
         return otherIds.getNomsNumber();
     }

@@ -27,7 +27,7 @@ public class JsonUtilTest {
 
         final String str = JsonUtil.toString(detail);
 
-        assertEquals("{\"offenderId\":11,\"crn\":\"CRN11\",\"nomsNumber\":null}", str);
+        assertEquals("{\"offenderId\":11,\"crn\":\"CRN11\"}", str);
     }
 
     @Test
