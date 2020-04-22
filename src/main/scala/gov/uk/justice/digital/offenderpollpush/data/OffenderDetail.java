@@ -34,17 +34,24 @@ public class OffenderDetail {
         @JsonProperty
         private String crn;
 
+        @JsonProperty
+        private String nomsNumber;
+
         @SuppressWarnings("unused")
         private IDs() {
             // Required by Jackson
         }
 
-        public IDs(final String crn) {
+        public IDs(final String crn, final String nomsNumber) {
             this.crn = crn;
+            this.nomsNumber = nomsNumber;
         }
 
         public String getCrn() {
             return crn;
+        }
+        public String getNomsNumber() {
+            return nomsNumber;
         }
     }
 
@@ -55,5 +62,10 @@ public class OffenderDetail {
     @JsonProperty("crn")
     public String getCrn() {
         return otherIds.getCrn();
+    }
+
+    @JsonProperty("nomsNumber")
+    public String getNomsNumber() {
+        return otherIds.getNomsNumber();
     }
 }
