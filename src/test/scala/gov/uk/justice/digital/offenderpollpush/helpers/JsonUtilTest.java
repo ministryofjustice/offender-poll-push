@@ -31,7 +31,7 @@ public class JsonUtilTest {
     }
 
     @Test
-    public void testTobObject() throws IOException {
+    public void testToObject() throws IOException {
 
         final String filePath = "src/test/resources/offenderDetail.json";
         final String content = new String (Files.readAllBytes( Paths.get(filePath) ));
