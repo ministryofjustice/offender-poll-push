@@ -1,6 +1,7 @@
 package gov.uk.justice.digital.offenderpollpush.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
@@ -34,17 +35,24 @@ public class OffenderDetail {
         @JsonProperty
         private String crn;
 
+        @JsonProperty
+        private String nomsNumber;
+
         @SuppressWarnings("unused")
         private IDs() {
             // Required by Jackson
         }
 
-        public IDs(final String crn) {
+        public IDs(final String crn, final String nomsNumber) {
             this.crn = crn;
+            this.nomsNumber = nomsNumber;
         }
 
         public String getCrn() {
             return crn;
+        }
+        public String getNomsNumber() {
+            return nomsNumber;
         }
     }
 
@@ -55,5 +63,11 @@ public class OffenderDetail {
     @JsonProperty("crn")
     public String getCrn() {
         return otherIds.getCrn();
+    }
+
+    @JsonProperty("nomsNumber")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String getNomsNumber() {
+        return otherIds.getNomsNumber();
     }
 }
